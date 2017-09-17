@@ -1,0 +1,125 @@
+#
+#  define units
+#
+units       metal
+#
+#  specify periodic boundary conditions
+#
+boundary p p p
+#
+#  define atom_style
+#
+atom_style  atomic
+#
+# read data
+#
+read_data Al.lmp
+#
+#   define mass
+#
+mass 1 26.9815 
+#
+#  specify interaction potential
+#  pairwise interaction via the Lennard-Jones potential with a cut-off at 2.5 lj-sigma
+#
+pair_style  lj/cut 2.5
+#  specify parameters between atoms of type 1 with an atom of type 1
+#  epsilon = 1.0, sigma = 1.0, cutoff = 2.5
+pair_coeff  * * 0.50722 2.57 3.4
+#
+# add long-range tail correction
+#
+pair_modify tail yes
+#
+#  specify parameters for neighbor list 
+#  rnbr = rcut + 0.3
+#
+neighbor    0.3 bin
+neigh_modify    delay 5 every 1
+#
+#  specify initial velocity of atoms
+#  group = all
+#  reduced temperature is T = 1.0 = lj-eps/kb 
+#  seed for random number generator
+#  distribution is gaussian (e.g. Maxwell-Boltzmann)
+#
+velocity	all create 300 87287 dist gaussian
+#
+#  specify thermodynamic properties to be output
+#  pe = potential energy
+#  ke = kinetic energy
+#  etotal = pe + ke
+#  temp = temperature
+#  press = pressure
+#  density = number density
+#  output every thousand steps
+#  norm = normalize by # of atoms (yes or no)
+#
+
+compute eng all pe/atom                                 ## compute potential energy for each atom
+compute eatoms all reduce sum c_eng                     ## compute total energy for whole system
+thermo_style custom step pe ke etotal temp press density c_eatoms lx
+thermo 100
+thermo_modify norm no
+timestep 0.001
+
+fix MIN all box/relax x 0.0 y 0.0 z 0.0
+min_style cg
+minimize 1e-5 1e-5 100 100
+run 0
+unfix MIN
+
+#
+#  specify ensemble
+#  fixid = 1
+#  atoms = all
+#  ensemble = nve or nvt
+#  
+#
+fix     1 all nve
+#
+#  run 10000 steps
+#
+run 10000
+#
+#  stop fix with given fixid
+#  fixid = 1
+#
+unfix 1
+#
+#  specify ensemble
+#  fixid = 2
+#  atoms = all
+#  ensemble = nvt
+#  temp = temperature
+#  initial temperature = 1.0
+#  final temperature = 1.0
+#  thermostat controller gain = 0.1 (units of time, bigger is less tight control)
+#
+fix     2 all nvt temp 300.0 300.0 0.1 
+run     10000
+unfix 2
+
+fix 3 all npt temp 300 300 1 iso 0 0 1 drag 1
+# Run for at least 10 picosecond (assuming 1 fs timestep)
+run 20000
+unfix 3
+
+fix 4 all npt temp 300 300 1 iso 0 0 1 drag 1
+# Run for at least 10 picosecond (assuming 1 fs timestep)
+
+#
+#   save configurations
+#   dumpid = 1
+#   filename = output.xyz
+#
+#dump 		1 all cfg 250 dump.comp_*.cfg mass type xs ys zs 
+#dump     1 all custom 250 dump.comp.* id type xs ys zs  
+#dump 1 all atom 100 dump.atom
+dump    1  all xyz 100 output.xyz
+dump_modify 1 element Al
+
+
+
+run 20000
+unfix 4

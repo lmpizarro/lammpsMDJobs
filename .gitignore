@@ -1,0 +1,7 @@
+*.lmp
+*.lammps
+*.csv
+*.agr
+*.xyz
+*.txt
+*.log
