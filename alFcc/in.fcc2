@@ -119,7 +119,5 @@ fix 4 all npt temp 300 300 1 iso 0 0 1 drag 1
 dump    1  all xyz 100 output.xyz
 dump_modify 1 element Al
 
-
-
 run 20000
 unfix 4
