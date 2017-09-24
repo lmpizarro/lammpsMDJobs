@@ -1,0 +1,129 @@
+variable THERMO_DAMP equal 0.1
+variable BARO_DAMP equal 1 
+variable DRAG_VALUE equal 1
+variable RUN_THERMA equal 5000
+variable RUN_SHAKE equal 3000
+variable RUN_EQUIL equal 10000
+variable THERMO_STEP equal 100
+variable TIME_STEP equal 0.001
+
+
+variable To equal 225
+variable Tf equal 300
+variable dT equal 25
+variable nit equal round((${Tf}-${To})/${dT})+1
+
+
+#
+#  define units
+#
+units       metal
+#
+#  specify periodic boundary conditions
+#
+boundary p p p
+#
+#  define atom_style
+#
+atom_style  atomic
+#
+# read data
+#
+read_data Al.lmp
+#
+#   define mass
+#
+mass 1 26.9815 
+# ------------------------ FORCE FIELDS ------------------------------
+
+pair_style  lj/cut 2.5
+#  specify parameters between atoms of type 1 with an atom of type 1
+#  epsilon = 1.0, sigma = 1.0, cutoff = 2.5
+pair_coeff  * * 0.50722 2.57 3.4
+#
+# add long-range tail correction
+#
+pair_modify tail yes
+#
+#  specify parameters for neighbor list 
+#  rnbr = rcut + 0.3
+#
+neighbor    0.3 bin
+neigh_modify delay 10 check yes
+
+# ---------- Define Settings ---------------------
+#  per-atom potential energy  eng, store the potential energy for each atom 
+compute eng all pe/atom 
+# 'eatoms' is defined to store the sum of all 'eng' values.
+compute eatoms all reduce sum c_eng 
+
+timestep ${TIME_STEP} 
+
+thermo ${THERMO_STEP} 
+#thermo_style custom step pe ke lx vol temp press density c_eatoms
+thermo_style custom step pe ke vol etotal temp press density lx c_eatoms
+# ---------- Run Minimization --------------------- 
+reset_timestep 0 
+fix 1 all box/relax iso 0.0 vmax 0.1
+#min_style cg 
+minimize 1e-35 1e-35 5000 10000 
+unfix 1
+
+velocity all create ${To} 12345678
+
+print "Iter Etot(eV) Natoms Lx(A) Ecoh(eV) Temp(K)" file ./resume.dat
+
+label loop
+
+variable Tstart equal ${To}
+
+variable i uloop ${nit}
+
+  variable T equal ${To}+${dT}
+
+  log ./logs/log_therma_${T}.lammps
+
+  fix 2 all npt temp ${Tstart} ${T} ${THERMO_DAMP} iso 0 0 ${BARO_DAMP} drag ${DRAG_VALUE}
+  run ${RUN_THERMA}
+  unfix 2 
+
+
+  log ./logs/log_NPT_${T}.lammps
+
+  fix 3 all npt temp ${T} ${T} ${THERMO_DAMP} iso 0 0 ${BARO_DAMP} drag ${DRAG_VALUE}
+  run ${RUN_EQUIL}
+  unfix 3
+
+  log ./logs/log_NVE_${T}.lammps
+  fix 4 all nve
+  run ${RUN_EQUIL}
+  unfix 4
+
+  log ./logs/log_SHAKE_${T}.lammps
+  fix 5 all npt temp ${T} ${T} ${THERMO_DAMP} iso 0 0 ${BARO_DAMP} drag ${DRAG_VALUE}
+  run ${RUN_SHAKE}
+  unfix 5 
+
+  log ./logs/log_NVT_${T}.lammps
+  fix 6 all nvt  temp ${T} ${T} ${THERMO_DAMP}
+  run ${RUN_EQUIL}
+  unfix 6
+
+
+  variable To equal ${T} 
+ 
+  variable natoms equal "count(all)" 
+  variable teng equal "c_eatoms"
+  variable length equal "lx"
+  variable ecoh equal "v_teng/v_natoms"
+
+  print "Iter: ${i} Tstart: ${Tstart} Tobj: ${T} Tot Iter: ${nit}" file ./data/alFcc_${T}.dat
+  print "Total energy (eV) = ${teng};" append ./data/alFcc_${T}.dat
+  print "Number of atoms = ${natoms};" append ./data/alFcc_${T}.dat
+  print "Lattice constant (Angstoms) = ${length};"  append ./data/alFcc_${T}.dat
+  print "Cohesive energy (eV) = ${ecoh};"  append ./data/alFcc_${T}.dat
+  print "${i} ${teng} ${natoms} ${length} ${ecoh} ${T}" append resume.dat
+next i
+jump SELF loop
+#
+print "All done!" 
