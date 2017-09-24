@@ -18,7 +18,7 @@ Poteng = []
 Density = []
 
 
-print "ensem tref time press temp toteng, volume, poteng"
+format_ = ("%s %f %d %f %f %f %f %f %f\n")
 for tref in range(250,350,25):
     for ens in ensembles:
         LOG = folder + "/log_" + ens + "_"+ str(tref) + ".lammps"
@@ -34,6 +34,19 @@ for tref in range(250,350,25):
         [Poteng.append(e) for e in poteng]
         [Density.append(e) for e in density]
 
-
+        fileName = "./post/data_" + str(tref) + "_" + ens + ".dat" 
+        f = open(fileName, 'w')
+        f.write( "ensem tref time press temp toteng, volume, poteng\n")
         for i,t in enumerate(Time):
-            print ens, tref, t, Press[i], Temp[i], Toteng[i], Volume[i], Poteng[i], Density[i]
+            str_ = format_ %(ens, tref, t, Press[i], Temp[i], Toteng[i], Volume[i], Poteng[i], Density[i])
+            f.write (str_) 
+        f.close()
+        Time  = []
+        Press = []
+        Temp = []
+        Toteng = []
+        Volume = []
+        Poteng = []
+        Density = []
+
+
