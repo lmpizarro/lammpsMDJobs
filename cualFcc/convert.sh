@@ -1,0 +1,2 @@
+mogrify -format ppm *.jpg
+
