@@ -9,3 +9,7 @@
 *.variable
 *.dat
 *.cfg
+*.jpg
+*.swp
+*.xyz
+*.xsf

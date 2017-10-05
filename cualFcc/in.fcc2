@@ -1,3 +1,4 @@
+#echo both
 #
 #  define units
 #
@@ -20,8 +21,6 @@ read_data interface.lmp
 #
 mass		1 63.0
 mass		2 13.0
-
-
 
 #
 #  specify interaction potential
@@ -69,7 +68,8 @@ velocity	all create 300 87287 dist gaussian
 
 compute eng all pe/atom                                 ## compute potential energy for each atom
 compute eatoms all reduce sum c_eng                     ## compute total energy for whole system
-thermo_style custom step pe ke etotal temp press density c_eatoms
+
+thermo_style custom step pe ke etotal temp press vol c_eatoms
 thermo 100
 thermo_modify norm no
 timestep 0.001
@@ -81,6 +81,12 @@ minimize 1e-5 1e-5 100 100
 run 0
 
 unfix MIN
+
+dump d0 all image 100 dump.*.jpg  type type size 1280 730 &
+     view 90 0 box yes .005 axes yes 1.0 0.005 zoom 1.3
+dump_modify d0  thresh x >= 0 thresh x <= 20 boxcolor white pad 6
+
+dump lmps all atom 100 dump.lmp
 
 #
 #  specify ensemble
@@ -96,15 +102,11 @@ fix     1 all nve
 run 10000
 
 
-
 #
 #  stop fix with given fixid
 #  fixid = 1
 #
 unfix 1
-
-
-
 
 #
 #  specify ensemble
@@ -136,8 +138,5 @@ unfix 3
 #dump     1 all custom 250 dump.comp.* id type xs ys zs  
 #dump 1 all atom 100 dump.atom
 #dump_modify 1 element Cu Al
-dump    1  all xyz 100 output.xyz
-dump_modify 1 element Cu Al
-
-
-unfix 3
+#dump    1  all xyz 100 output.xyz
+#dump_modify 1 element Cu Al
