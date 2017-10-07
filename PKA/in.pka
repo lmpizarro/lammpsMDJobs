@@ -1,0 +1,75 @@
+# Input file for Vacancy Formation Energy
+
+# --------------- INITIALIZATION ------------------
+clear
+units 		metal
+dimension	3
+boundary	p	p    p      
+atom_style	atomic
+# ------------------ ATOM DEFINITION -------------------
+variable ao equal 4.615
+
+lattice         fcc 4.615
+region		simbox block -0 8 -0 8 -0 8
+
+create_box	1 simbox
+
+lattice 	fcc 3.615  orient x 1 0 0 orient y 0 1 0 orient z 0 0 1
+create_atoms	1 region simbox
+ 
+# ------------------------ FORCE FIELDS -----------------------
+mass		1 63.0
+pair_style  lj/cut 7
+pair_coeff  1 1 0.520 2.3 3.0
+
+
+#---------------------------Settings----------------------------
+compute csym all centro/atom fcc
+compute eng all pe/atom
+compute keng all ke/atom
+compute eatoms all reduce sum c_eng
+
+#----------------------Run Minimization-------------------------
+reset_timestep	0
+
+timestep 0.001
+
+thermo 100
+thermo_style custom step temp pe ke vol press  c_eatoms 
+
+dump 1 all custom 500 dump.* id type xs ys zs vx vy vz c_csym c_eng 
+
+min_style cg
+minimize 1e-15 1e-15 5000 5000
+
+run 0
+
+variable TEMP equal 300
+
+dump d0 all image 100 JPG/dump.*.jpg type type
+dump_modify d0 thresh c_keng > .2 pad 5
+
+velocity all create ${TEMP} 4928459  dist gaussian
+
+fix 1 all npt temp ${TEMP} ${TEMP} .1 iso 0 0 .1
+run 4000
+unfix  1
+
+
+#---------------------------------------------------------------
+variable r2 equal 1.2*sqrt(${ao}^2+${ao}^2)/4
+#r2 is the radius of the copper atom
+
+#region select is a region defined so that all atoms within this region are removed
+region select sphere 0 0 0 ${r2} units box
+group v_atom region select
+
+# angstroms / picoseconds
+velocity v_atom  set  100 0 0
+
+thermo 1
+
+fix 2 all npt temp  ${TEMP} ${TEMP} .1 iso 0 0 .1
+
+run 6000
+unfix  2
