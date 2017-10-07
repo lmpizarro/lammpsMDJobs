@@ -1,4 +1,5 @@
 # Input file for Vacancy Formation Energy
+echo both
 
 # --------------- INITIALIZATION ------------------
 clear
@@ -7,18 +8,24 @@ dimension	3
 boundary	p	p    p      
 atom_style	atomic
 # ------------------ ATOM DEFINITION -------------------
-variable ao equal 4.615
+variable ao equal 4.35
+variable nxyz equal 12
+variable nx equal ${nxyz}
+variable ny equal ${nxyz}
+variable nz equal ${nxyz}
 
-lattice         fcc 4.615
-region		simbox block -0 8 -0 8 -0 8
+variable halfLx equal ${ao}*${nx}/2
+
+lattice         fcc ${ao} 
+region		simbox block -0 ${nx} -0 ${ny} -0 ${nz} 
 
 create_box	1 simbox
 
-lattice 	fcc 3.615  orient x 1 0 0 orient y 0 1 0 orient z 0 0 1
+lattice 	fcc ${ao}  orient x 1 0 0 orient y 0 1 0 orient z 0 0 1
 create_atoms	1 region simbox
  
 # ------------------------ FORCE FIELDS -----------------------
-mass		1 63.0
+mass	1 63.0
 pair_style  lj/cut 7
 pair_coeff  1 1 0.520 2.3 3.0
 
@@ -44,32 +51,48 @@ minimize 1e-15 1e-15 5000 5000
 
 run 0
 
-variable TEMP equal 300
+variable TEMP_0 equal 300
 
 dump d0 all image 100 JPG/dump.*.jpg type type
-dump_modify d0 thresh c_keng > .2 pad 5
+dump_modify d0 thresh c_keng > .2 pad 6
 
-velocity all create ${TEMP} 4928459  dist gaussian
+velocity all create ${TEMP_0} 4928459  dist gaussian
 
-fix 1 all npt temp ${TEMP} ${TEMP} .1 iso 0 0 .1
+fix 1 all npt temp ${TEMP_0} ${TEMP_0} .1 iso 0 0 .1
 run 4000
 unfix  1
 
-
 #---------------------------------------------------------------
-variable r2 equal 1.2*sqrt(${ao}^2+${ao}^2)/4
+variable r2 equal 1.1*sqrt(${ao}^2+${ao}^2)/4
 #r2 is the radius of the copper atom
 
 #region select is a region defined so that all atoms within this region are removed
-region select sphere 0 0 0 ${r2} units box
+region select sphere ${halfLx} ${halfLx} ${halfLx}  ${r2} units box
 group v_atom region select
 
 # angstroms / picoseconds
 velocity v_atom  set  100 0 0
 
+timestep 0.0001
 thermo 1
 
-fix 2 all npt temp  ${TEMP} ${TEMP} .1 iso 0 0 .1
-
-run 6000
+#fix 2 all npt temp  ${TEMP} ${TEMP} .1 iso 0 0 .1
+fix 2 all nve
+run 20000
 unfix  2
+
+timestep 0.001
+thermo 10
+
+# http://lammps.sandia.gov/threads/msg69325.html
+#fix 3 all npt temp $(temp) ${TEMP} .1 iso 0 0 .1
+
+#fix fxlan all langevin $(temp) ${TEMP_0} 1.0 48279
+#fix fxlan all temp/berendsen $(temp) ${TEMP_0} 1.0 
+#fix 3 all nve
+fix 3 all nvt temp $(temp) ${TEMP_0} 1.0 
+run 20000
+#unfix fxlan
+unfix  3
+
+

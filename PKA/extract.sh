@@ -1,1 +1,1 @@
-tail -n 6000 log.lammps |head -n 5900 >data.txt
+tail -n 20000 log.lammps |head -n 19900 >data.txt
