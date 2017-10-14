@@ -54,11 +54,16 @@ def makeEmbed(rho_e, rho_s, F_ni, F_i, F_e, eta):
   return func
 
 class calcPotentials():
-    def __init__(self, ES):
+    def __init__(self, ES, nrho=5000, drho=0.02, nr=5000, dr=0.0015):
         self.ES = ES
         self.Nelements =len(ES)
         self.pairPotentials = []
-
+        self.eamPotentials = []
+        self.nrho = nrho
+        self.drho = drho
+        self.nr = nr
+        self.dr = dr
+ 
         self.myParameters={}
 
         for e in ES:
@@ -78,14 +83,35 @@ class calcPotentials():
                 E1['F_e_'], E1['eta_'])
             self.myParameters[e]['embed'] = embed_E1 
  
-            #self.eamPotentials.append(EAMPotential(E1['symbol'], E1['number'], \
-            #    E1['mass'], embed_E1, dens_E1))
+            self.eamPotentials.append(EAMPotential(E1['symbol'], E1['number'], \
+                E1['mass'], embed_E1, dens_E1))
 
             pair_E1E1 = makePairPotAA(E1['A_'], E1['gamma_'], E1['r_e'], E1['kappa_'], E1['B_'], E1['omega_'], E1['lambda_'])
 
             self.myParameters[e]['pair']=pair_E1E1
 
         #print self.myParameters
+
+    def getEamPotentials(self):
+        return self.eamPotentials
+
+
+    def pairE1E2(self):
+        for i,e in enumerate(ES):
+            for j in range(i+1, len(ES)):
+                E1 = self.myParameters[ES[i]]
+                E2 = self.myParameters[ES[j]]
+                #print ES[i],ES[j], E1['symbol'], E2['symbol']
+                pair_E1E2 = makePairPotAB(E2['dens'], E2['pair'],E1['dens'],E1['pair'])
+                self.pairPotentials.append(Potential(E1['symbol'], E2['symbol'], pair_E1E2))
+
+    def getPairPotentials(self):
+        self.pairE1E2()
+        for e in ES:
+            E1 =self.myParameters[e]
+            self.pairPotentials.append(Potential(E1['symbol'], E1['symbol'], E1['pair']))
+
+        return self.pairPotentials
 
     # pyformat.info
     def __str__(self):
@@ -103,49 +129,41 @@ class calcPotentials():
 
         return str_
 
+    def createPot(self):
+        pass
+        fileName = 'Zhou_'
+        for e in self.ES:
+            fileName +=e
+        comment = fileName
+        fileName += '.setfl'
 
-    def getEamPotentials(self):
-        eamPotentials =[]
+        eamPotentials = self.getEamPotentials()
+        pairPotentials = self.getPairPotentials()
 
-        for mp in self.myParameters:
-            E1 = self.myParameters[mp]
-            eamPotentials.append( 
-                EAMPotential(E1['symbol'], E1['number'], E1['mass'], E1['embed'], E1['dens'])
-                    )
-
-        return eamPotentials
-
-
-    def pairE1E2(self):
-        for i,e in enumerate(ES):
-            for j in range(i+1, len(ES)):
-                E1 = self.myParameters[ES[i]]
-                E2 = self.myParameters[ES[j]]
-                #print ES[i],ES[j], E1['symbol'], E2['symbol']
-                pair_E1E2 = makePairPotAB(E2['dens'], E2['pair'],E1['dens'],E2['pair'])
-                self.pairPotentials.append(pair_E1E2)
-
-    def getPairPotentials(self):
-        self.pairE1E2()
-        for e in ES:
-            self.pairPotentials.append(self.myParameters[e]['pair'])
-
-        return self.pairPotentials
-
-
+        with open(fileName, 'wb') as outfile:
+            writeSetFL(
+            self.nrho, self.drho,
+            self.nr, self.dr,
+            eamPotentials,
+            pairPotentials,
+            out = outfile,
+            comments = [comment, "", ""]) # <-- Note: title lines given as list of three strings
  
+
 if __name__ == '__main__':
     ES = ['Zr', 'Nb','Al', 'Ti']
 
-    c = calcPotentials(ES)
-    eamPotentials = c.getEamPotentials()
+    fileName = 'Zhou_'
+    for e in ES:
+        fileName +=e
+    comment = fileName
+    fileName += '.setfl'
 
+    c = calcPotentials(ES)
     print c
 
-    print eamPotentials
 
+    eamPotentials = c.getEamPotentials()
     pairPotentials = c.getPairPotentials()
 
-    print pairPotentials
-
-
+    c.createPot()
