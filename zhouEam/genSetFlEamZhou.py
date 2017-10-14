@@ -56,9 +56,8 @@ def makeEmbed(rho_e, rho_s, F_ni, F_i, F_e, eta):
 class calcPotentials():
     def __init__(self, ES):
         self.ES = ES
-        self.eamPotentials = []
-        self.pairsE1E2 = []
         self.Nelements =len(ES)
+        self.pairPotentials = []
 
         self.myParameters={}
 
@@ -79,8 +78,8 @@ class calcPotentials():
                 E1['F_e_'], E1['eta_'])
             self.myParameters[e]['embed'] = embed_E1 
  
-            self.eamPotentials.append(EAMPotential(E1['symbol'], E1['number'], \
-                E1['mass'], embed_E1, dens_E1))
+            #self.eamPotentials.append(EAMPotential(E1['symbol'], E1['number'], \
+            #    E1['mass'], embed_E1, dens_E1))
 
             pair_E1E1 = makePairPotAA(E1['A_'], E1['gamma_'], E1['r_e'], E1['kappa_'], E1['B_'], E1['omega_'], E1['lambda_'])
 
@@ -102,14 +101,51 @@ class calcPotentials():
                     str_ +='{:14f}'.format(float(self.myParameters[s][c]))
                 str_ +='\n'
 
-        return str_ 
+        return str_
+
+
+    def getEamPotentials(self):
+        eamPotentials =[]
+
+        for mp in self.myParameters:
+            E1 = self.myParameters[mp]
+            eamPotentials.append( 
+                EAMPotential(E1['symbol'], E1['number'], E1['mass'], E1['embed'], E1['dens'])
+                    )
+
+        return eamPotentials
+
+
+    def pairE1E2(self):
+        for i,e in enumerate(ES):
+            for j in range(i+1, len(ES)):
+                E1 = self.myParameters[ES[i]]
+                E2 = self.myParameters[ES[j]]
+                #print ES[i],ES[j], E1['symbol'], E2['symbol']
+                pair_E1E2 = makePairPotAB(E2['dens'], E2['pair'],E1['dens'],E2['pair'])
+                self.pairPotentials.append(pair_E1E2)
+
+    def getPairPotentials(self):
+        self.pairE1E2()
+        for e in ES:
+            self.pairPotentials.append(self.myParameters[e]['pair'])
+
+        return self.pairPotentials
+
 
  
 if __name__ == '__main__':
     ES = ['Zr', 'Nb','Al', 'Ti']
 
     c = calcPotentials(ES)
+    eamPotentials = c.getEamPotentials()
 
     print c
+
+    print eamPotentials
+
+    pairPotentials = c.getPairPotentials()
+
+    print pairPotentials
 
 
