@@ -16,3 +16,5 @@
 dump.*
 *.mkv
 *.avi
+eam_tabulate*
+*.pyc
