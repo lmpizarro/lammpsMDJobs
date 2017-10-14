@@ -153,17 +153,8 @@ class calcPotentials():
 if __name__ == '__main__':
     ES = ['Zr', 'Nb','Al', 'Ti']
 
-    fileName = 'Zhou_'
-    for e in ES:
-        fileName +=e
-    comment = fileName
-    fileName += '.setfl'
-
     c = calcPotentials(ES)
     print c
 
-
-    eamPotentials = c.getEamPotentials()
-    pairPotentials = c.getPairPotentials()
 
     c.createPot()
