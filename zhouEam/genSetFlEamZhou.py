@@ -65,6 +65,8 @@ class calcPotentials():
         for e in ES:
             self.myParameters[e] = dbZhou.parameters[e]
 
+        self.symbols = self.myParameters.keys()
+        self.k_p = self.myParameters[self.symbols[0]].keys()
 
         for e in ES:
             E1 =  self.myParameters[e]
@@ -84,11 +86,30 @@ class calcPotentials():
 
             self.myParameters[e]['pair']=pair_E1E1
 
-        print self.myParameters    
+        #print self.myParameters
+
+    # pyformat.info
+    def __str__(self):
+        str_ = ' '*18
+        for s in self.symbols:
+            str_ += '{:14}'.format(s)
+        str_ +='\n' 
+
+        for c in self.k_p:
+            if c != 'name' and c != 'symbol':
+                str_ +='{:8}'.format(c)
+                for s in self.symbols:
+                    str_ +='{:14f}'.format(float(self.myParameters[s][c]))
+                str_ +='\n'
+
+        return str_ 
+
  
 if __name__ == '__main__':
     ES = ['Zr', 'Nb','Al', 'Ti']
 
-    calcPotentials(ES)
+    c = calcPotentials(ES)
+
+    print c
 
 
