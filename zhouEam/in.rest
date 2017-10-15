@@ -1,0 +1,44 @@
+echo both
+# 3D copper block simulation
+boundary    s s s
+units       metal
+atom_style  atomic
+
+variable atom3 string "A"
+variable material string ZrNb${atom3}Ti
+variable type string npt
+
+variable n_runs equal 100000
+#Langevin random seed
+variable r equal 57085
+variable tinit equal 300.0
+variable tend equal ${tinit}
+variable drag equal .01
+
+# geometry
+read_restart restart-${material}.${type}
+change_box all  boundary p p p
+
+pair_style eam/alloy
+pair_coeff * * Zhou_${material}.setfl Zr Nb ${atom3} Ti 
+
+
+log log-${material}-${type}.lammps
+#fix lan all langevin ${tinit} ${tend} ${drag} 12345 
+#fix 1 all nve
+
+fix 1 all npt temp ${tinit} ${tend} .01 iso 0.0 0.0 .1
+
+#
+timestep 1e-3
+
+# output
+#                    1    2    3  4  5     6   7  8  9  10 11 12
+thermo_style  custom step temp pe ke density  press vol enthalpy 
+thermo  100
+
+# execution
+run 	 ${n_runs}
+write_restart restart-${material}.${type}
+
+unfix 1
