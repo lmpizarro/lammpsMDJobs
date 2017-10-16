@@ -151,7 +151,7 @@ class calcPotentials():
  
 
 if __name__ == '__main__':
-    ES = ['Zr', 'Nb','Al', 'Ti']
+    ES = ['Zr', 'Nb','Cr', 'Ti']
 
     c = calcPotentials(ES)
     print c
