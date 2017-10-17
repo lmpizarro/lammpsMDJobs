@@ -10,7 +10,7 @@ boundary	p	p    p
 atom_style	atomic
 # ------------------ ATOM DEFINITION -------------------
 variable ao equal 4.35
-variable nxyz equal 22
+variable nxyz equal 10
 variable nx equal ${nxyz}
 variable ny equal ${nxyz}
 variable nz equal ${nxyz}

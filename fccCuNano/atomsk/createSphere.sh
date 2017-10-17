@@ -17,5 +17,6 @@ atomsk --merge 2 esphere_out.cfg esphere_in.cfg sphere_in.cfg
 rm esphere_in.cfg esphere_out.cfg
 
 
-atomsk sphere_in.cfg sphere_in.lmp
+#atomsk sphere_in.cfg sphere_in.lmp
 
+#Atomeye sphere_in.cfg
