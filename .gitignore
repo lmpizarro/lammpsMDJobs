@@ -16,3 +16,8 @@
 dump.*
 *.mkv
 *.avi
+eam_tabulate*
+*.pyc
+*.setfl
+restart*
+*.pdf

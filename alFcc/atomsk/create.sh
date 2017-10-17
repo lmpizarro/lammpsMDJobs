@@ -6,6 +6,6 @@
 rm -f interface.* *.atsk
 
 # First, create the bottom crystal of fcc Cu
-atomsk --create fcc 4.24 Al orient [100] [010] [001] -duplicate 10 10 10 lammps
+atomsk --create fcc 4.24 Al orient [100] [010] [001] -duplicate 5 5 5 lammps
 
 

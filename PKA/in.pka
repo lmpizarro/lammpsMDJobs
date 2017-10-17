@@ -73,15 +73,15 @@ group v_atom region select
 # angstroms / picoseconds
 velocity v_atom  set  100 0 0
 
-timestep 0.00005
+timestep 0.00001
 thermo 10
 
 #fix 2 all npt temp  ${TEMP} ${TEMP} .1 iso 0 0 .1
 fix 2 all nve
-run 30000
+run 60000
 unfix  2
 
-timestep 0.001
+timestep 0.0001
 thermo 100
 
 # http://lammps.sandia.gov/threads/msg69325.html
