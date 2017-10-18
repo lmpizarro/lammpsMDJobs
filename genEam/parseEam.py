@@ -4,19 +4,15 @@ from periodictable import elements
 '''
 https://sites.google.com/site/eampotentials/Home/MgY#TOC-Latest:-PdSi.lammps.eam-10-10-2011-
 '''
-
 fileName = 'MgY.lammps.eam'
 potentials = {'properties':{}}
-
-
+symbols =[]
 
 def readFile():
     with open(fileName) as f:
         content = f.readlines()
     content = [x.strip() for x in content]
-
     return content
-
 
 def getElement(content, cLines):
     e = content[cLines].split()
@@ -25,7 +21,6 @@ def getElement(content, cLines):
     potentials[symbol]['aMass'] = float(e[1])
     potentials[symbol]['a0'] = float(e[2])
     potentials[symbol]['lat'] = e[3]
-
     return symbol
 
 def getRhoV(symbol, content, cLines, nr):
@@ -41,8 +36,9 @@ def getRhoV(symbol, content, cLines, nr):
          if NR == nr:
              break
 
-    return V, cLines
+    potentials[symbol]['V'] = V
 
+    return cLines
 
 def getRhoF(symbol, content, cLines, nrho, nr):
     F1 = []
@@ -59,8 +55,7 @@ def getRhoF(symbol, content, cLines, nrho, nr):
          if NRHO == nrho:
              break
 
-    potentials[symbol]['F1'] = F1
-
+    potentials[symbol]['F'] = F1
 
     r = cLines
     for i, c in enumerate(content[r + 1:]):
@@ -72,7 +67,7 @@ def getRhoF(symbol, content, cLines, nrho, nr):
          if NR == nr:
              break
 
-    potentials[symbol]['F1'] = RHO1
+    potentials[symbol]['RHO'] = RHO1
 
     return cLines
 
@@ -82,15 +77,20 @@ def main():
     cLine = 3
     e = content[cLine].split()
     potentials['properties']['nEls'] = int(e[0])
+    s12 = ""
     for i in range(potentials['properties']['nEls']):
+        s12 +=e[1+i]
         potentials[e[1+i]] ={}
+    potentials[s12] = {}
+
+
 
     cLine +=1
     e = content[cLine].split()
-    potentials['properties']['nrho'] =  int(e[0])
-    potentials['properties']['drho'] =  float(e[1])
-    potentials['properties']['nr'] =  int(e[2])
-    potentials['properties']['dr'] =  float(e[3])
+    potentials['properties']['nrho'] =  int(e[0])# n points density
+    potentials['properties']['drho'] =  float(e[1])# distance points density
+    potentials['properties']['nr'] =  int(e[2])# n points embed & Vpair
+    potentials['properties']['dr'] =  float(e[3])# distance points embed & Vpair
     potentials['properties']['cutoff'] = float(e[4])
 
     nrho = potentials['properties']['nrho']
@@ -99,29 +99,55 @@ def main():
     cLine +=1
     symbol = getElement(content, cLine)
     cLine = getRhoF(symbol, content, cLine, nrho, nr)
-    print symbol
+    symbols.append(symbol)
 
     cLine +=1
     symbol = getElement(content, cLine)
     cLine = getRhoF(symbol, content, cLine, nrho, nr)
-    print symbol
+    symbols.append(symbol)
 
-    print cLine
     #cLine +=1
     #def getRhoV(symbol, content, cLines, nr):
-    V1, cLine = getRhoV(symbol, content, cLine, nr)
-    V2, cLine = getRhoV(symbol, content, cLine, nr)
-    V3, cLine = getRhoV(symbol, content, cLine, nr)
+    cLine = getRhoV(symbols[0], content, cLine, nr)
+    symbol = symbols[0]+symbols[1]
 
+    symbols.append(symbol)
+    cLine = getRhoV(symbol, content, cLine, nr)
+    cLine = getRhoV(symbols[1], content, cLine, nr)
+
+    for e in symbols:
+        for k in  potentials[e]:
+            print e, k
+        print ""
+
+    rhoY =  potentials['Y']['RHO']
+    fY =  potentials['Y']['F']
+    vY =  potentials['Y']['V']
+
+    nrho = potentials['properties']['nrho']# n points density
+    drho = potentials['properties']['drho']# distance points density
+    nr = potentials['properties']['nr']# n points embed & Vpair
+    dr = potentials['properties']['dr']# distance points embed & Vpair
+    cutoff = potentials['properties']['cutoff']
+
+    print 'nrho*drho: ', nrho * drho
+    print 'nr*dr:     ', nr * dr
+    print 'cutoff:    ', cutoff
+
+    import numpy as np
+    xrho = np.linspace(0, nrho*drho, num=nrho, endpoint=True)
+    xr = np.linspace(0, nr*dr, num=nr, endpoint=True)
+
+    tr = 250
     import matplotlib.pyplot as plt
+    plt.plot(xr[tr:], vY[tr:])
+    plt.show()
 
-    #plt.plot(V1)
-    #plt.show()
-    #plt.plot(V2)
-    #plt.show()
-    #plt.plot(V3)
-    #plt.show()
+    plt.plot(xr[tr:], rhoY[tr:])
+    plt.show()
 
+    plt.plot(xrho, fY)
+    plt.show()
 
 if __name__ == "__main__":
   main()
