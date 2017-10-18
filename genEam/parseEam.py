@@ -17,58 +17,76 @@ def readFile():
 
     return content
 
-def getRhoF(content, init, nrho, nr):
 
-    e = content[init].split()
+def getElement(content, cLines):
+    e = content[cLines].split()
     aNumber = int(e[0])
     symbol = str(elements[aNumber])
     potentials[symbol]['aMass'] = float(e[1])
     potentials[symbol]['a0'] = float(e[2])
     potentials[symbol]['lat'] = e[3]
 
+    return symbol
+
+def getRhoV(symbol, content, cLines, nr):
+    V = []
+    NR = 0
+
+    for  c in content[cLines+1:]:
+         cLines +=1
+         dataL = c.split()
+         for d in dataL:
+             V.append(float(d))
+             NR +=1
+         if NR == nr:
+             break
+
+    return V, cLines
+
+
+def getRhoF(symbol, content, cLines, nrho, nr):
     F1 = []
     NRHO = 0
     RHO1 = []
     NR = 0
-    cLines = 0
-    for  c in content[init+1:]:
+
+    for  c in content[cLines+1:]:
          cLines +=1
          dataL = c.split()
          for d in dataL:
              F1.append(float(d))
              NRHO +=1
          if NRHO == nrho:
-             print "F1 ready"
              break
 
-    print len(F1), cLines, F1[len(F1)-1]
+    potentials[symbol]['F1'] = F1
 
-    print content[cLines+init + 2]
 
     r = cLines
-    for i, c in enumerate(content[r+init + 1:]):
+    for i, c in enumerate(content[r + 1:]):
          cLines +=1
          dataL = c.split()
          for d in dataL:
              RHO1.append(float(d))
              NR +=1
          if NR == nr:
-             print "RHO1 ready"
              break
 
-    print len(RHO1), cLines, RHO1[len(RHO1)-1]
+    potentials[symbol]['F1'] = RHO1
 
-    return F1, RHO1, cLines
+    return cLines
 
 def main():
     content = readFile()
 
-    e = content[3].split()
+    cLine = 3
+    e = content[cLine].split()
     potentials['properties']['nEls'] = int(e[0])
     for i in range(potentials['properties']['nEls']):
         potentials[e[1+i]] ={}
 
-    e = content[4].split()
+    cLine +=1
+    e = content[cLine].split()
     potentials['properties']['nrho'] =  int(e[0])
     potentials['properties']['drho'] =  float(e[1])
     potentials['properties']['nr'] =  int(e[2])
@@ -78,23 +96,31 @@ def main():
     nrho = potentials['properties']['nrho']
     nr = potentials['properties']['nr']
 
-    F1, RHO1, init = getRhoF(content, 5, nrho, nr)
+    cLine +=1
+    symbol = getElement(content, cLine)
+    cLine = getRhoF(symbol, content, cLine, nrho, nr)
+    print symbol
 
-    print potentials
-    print init 
+    cLine +=1
+    symbol = getElement(content, cLine)
+    cLine = getRhoF(symbol, content, cLine, nrho, nr)
+    print symbol
+
+    print cLine
+    #cLine +=1
+    #def getRhoV(symbol, content, cLines, nr):
+    V1, cLine = getRhoV(symbol, content, cLine, nr)
+    V2, cLine = getRhoV(symbol, content, cLine, nr)
+    V3, cLine = getRhoV(symbol, content, cLine, nr)
 
     import matplotlib.pyplot as plt
 
-    #plt.plot(F1)
+    #plt.plot(V1)
     #plt.show()
-    #plt.plot(RHO1)
+    #plt.plot(V2)
     #plt.show()
-
-    F2, RHO2, init = getRhoF(content, init + 6, nrho, nr)
-    plt.plot(F2)
-    plt.show()
-    plt.plot(RHO2)
-    plt.show()
+    #plt.plot(V3)
+    #plt.show()
 
 
 if __name__ == "__main__":
