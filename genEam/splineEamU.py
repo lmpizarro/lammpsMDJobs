@@ -86,11 +86,12 @@ def main():
   eamPotentials = [ EAMPotential("U", 92, 238.03, embed, density) ]
   pairPotentials = [ Potential('U', 'U', pair_UU) ]
 
-  nrho = 962
-  drho = 0.00103950
+  cutoff = 8.0
+  nrho = 962 # n points density
+  drho = 0.00103950 # distance points density
 
-  nr = 1462
-  dr = 6.0 / 1462.0
+  nr = 1462 # n points embed & Vpair
+  dr = cutoff / 1462.0 # distance points embed & Vpair
 
   from atsim.potentials import writeFuncFL
 
