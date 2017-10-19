@@ -6,21 +6,19 @@ potKeys = [['elt', 'lat', 'z', 'ielement', 'atwt'],
 
 elements={'U':{'elt':'U','lat':'fcc', 'z':12, 'ielement':92, 'atwt':238.03,\
 'alpha':5.1, 'b0':4.80, 'b1':6.0, 'b2':6, 'b3':6, 'alat':4.280, 'esub':5.27,\
-'asub':0.98, 't0':1,  't1':2.50, 't2':4, 't3':1.0, 'rozero':1, 'ibar':0},
+'asub':0.98, 't0':1,  't1':2.50, 't2':4, 't3':1.0, 'rozero':1, 'ibar':0},\
 'Zr':{'elt':'Zr', 'lat':'bcc', 'z':8, 'ielement':40, 'atwt':91.224,\
 'alpha':4.10, 'b0':2.80, 'b1':2.0, 'b2':7.00, 'b3':1.0, 'alat':3.535,\
 'esub':6.20, 'asub':0.48, 't0':1.0, 't1':3.00, 't2':2.0, 't3':-7.0,\
-'rozero':1, 'ibar':0},
+'rozero':1, 'ibar':0},\
 'Fe':{'elt':'Fe', 'lat':'bcc', 'z':8, 'ielement':26, 'atwt':55.845,\
 'alpha':5.07, 'b0':2.94, 'b1':1.0, 'b2':1.00, 'b3':1.0, 'alat':2.8665,\
 'esub':4.29, 'asub':0.89, 't0':1.0, 't1':3.94, 't2':4.12, 't3':-1.5,\
-'rozero':1, 'ibar':0},
+'rozero':1, 'ibar':0},\
 'Y':{'elt':'Y', 'lat':'hcp', 'z':12, 'ielement':39, 'atwt':88.90585,\
-'alpha':5.07, 'b0':4.74, 'b1':1.0, 'b2':2.50, 'b3':1.0, 'alat':2.8665,\
-'esub':5.30, 'asub':0.9, 't0':1.0, 't1':3.30, 't2':3.2, 't3':-2.0,\
-'rozero':1, 'ibar':0},
-
-
+'alpha':4.23, 'b0':2.00, 'b1':1.0, 'b2':1.00, 'b3':3.5, 'alat':3.6474,\
+'esub':4.37, 'asub':0.9, 't0':1.0, 't1':8.00, 't2':8.0, 't3':-8.5,\
+'rozero':1, 'ibar':0},\
 }
 '''
 for e in elements:
@@ -76,7 +74,7 @@ def genMeamf(els):
 
 
 def main ():
-    meamf = genMeamf(['U', 'Zr', 'Fe'])
+    meamf = genMeamf(['U', 'Zr', 'Fe', 'Y'])
     print meamf
 
 if __name__ == "__main__":
