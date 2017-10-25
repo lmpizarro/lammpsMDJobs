@@ -1,5 +1,6 @@
 from ase import Atoms
-from ase.calculators.lammps import LAMMPS
+#from ase.calculators.lammps import LAMMPS
+from lammps import LAMMPS
 from ase.constraints import UnitCellFilter
 from ase.optimize import FIRE
 
@@ -23,5 +24,6 @@ if __name__ == '__main__':
     FIRE(UnitCellFilter(bulk, mask=[1,1,1,0,0,0]), logfile='FIRE.log').run(fmax=0.0001)
 
     print bulk.get_cell()[0][0]
+    print bulk.get_number_of_atoms()
 
     calc.clean()

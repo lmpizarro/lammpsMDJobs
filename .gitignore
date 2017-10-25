@@ -21,3 +21,4 @@ eam_tabulate*
 *.setfl
 restart*
 *.pdf
+*.eam
