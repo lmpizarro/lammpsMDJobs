@@ -1,8 +1,11 @@
 from ase import Atoms
-#from ase.calculators.lammps import LAMMPS
 from lammps import LAMMPS
 from ase.constraints import UnitCellFilter
 from ase.optimize import FIRE
+
+import os
+os.environ["LAMMPS_COMMAND"] = "/opt/lmpizarro/GitHub/lammps/src/lmp_serial"
+
 
 if __name__ == '__main__':
 

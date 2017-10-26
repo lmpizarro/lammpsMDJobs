@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+global DEBUG
+DEBUG = False
+
 # lammps.py (2011/03/29)
 # An ASE calculator for the LAMMPS classical MD code available from
 #       http://lammps.sandia.gov/
@@ -187,6 +190,7 @@ class LAMMPS:
             return self._lmp_handle.wait()
         
     def run(self):
+
         """Method which explicitely runs LAMMPS."""
 
         self.calls += 1
@@ -311,7 +315,11 @@ class LAMMPS:
             # Expect lammps_in to be a file-like object
             f = lammps_in
             close_in_file = False
-            
+        
+        if DEBUG:
+           import StringIO
+           f = StringIO.StringIO()
+
         if self.keep_tmp_files:
             f.write('# (written by ASE)\n')
 
@@ -327,6 +335,8 @@ class LAMMPS:
             f.write('boundary %s \n' % parameters['boundary'])
         else:
             f.write('boundary %c %c %c \n' % tuple('sp'[x] for x in pbc))
+
+        f.write('atom_style atomic \n')
         f.write('atom_modify sort 0 0.0 \n')
         for key in ('neighbor' ,'newton'):
             if key in parameters:
@@ -406,7 +416,10 @@ class LAMMPS:
                 'thermo 1\n') % (' '.join(self._custom_thermo_args)))
 
         if 'minimize' in parameters:
+            f.write('fix 1 all box/relax iso 0.0 vmax 0.001\n')
+            f.write('min_style %s\n' % 'cg')
             f.write('minimize %s\n' % parameters['minimize'])
+
         if 'run' in parameters:
             f.write('run %s\n' % parameters['run'])
         if not (('minimize' in parameters) or ('run' in parameters)):
@@ -414,6 +427,12 @@ class LAMMPS:
 
         f.write('print "%s"\n' % CALCULATION_END_MARK)
         f.write('log /dev/stdout\n') # Force LAMMPS to flush log
+
+        if DEBUG:
+           a = f.getvalue()
+           print a
+
+
 
         if close_in_file:
             f.close()

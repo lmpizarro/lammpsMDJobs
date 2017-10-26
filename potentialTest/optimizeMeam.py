@@ -1,18 +1,17 @@
-import numpy as np
+import os
+os.environ["LAMMPS_COMMAND"] = "/opt/lmpizarro/GitHub/lammps/src/lmp_serial"
 
-from ase import Atoms
 from ase.constraints import UnitCellFilter
+from ase.eos import EquationOfState
 from ase.optimize import FIRE
 from ase.units import kJ, _e
-
-from ase.eos import EquationOfState
 from lammps import LAMMPS
+from ase import Atoms
+import numpy as np
 
 files = [ "meamf", "meam.alsimgcufe" ]
-
 mypc = [ "* * " + files[0] + " AlS SiS MgS CuS FeS " + files[1] ]
 parameters = { "pair_style" : "meam", "pair_coeff" : mypc }
-
 myext = "S"
 
 def pick_elements(parameters, elems):
@@ -24,29 +23,29 @@ pick_elements(parameters, species)
 
 if __name__ == '__main__':
 
-
     calc = LAMMPS(parameters=parameters, files=files)
-    a0 = 4.2
+    a0 = 4.5
     b0 = a0 / 2.0
     bulk = Atoms(['Al']*4,
-                     positions=[(0,0,0),(b0,b0,0),(b0,0,b0),(0,b0,b0)],
-                     cell=[a0, a0, a0],
-                     pbc=True)
+                 positions=[(0,0,0),(b0,b0,0),(b0,0,b0),(0,b0,b0)],
+                 cell=[a0, a0, a0],
+                 pbc=True)
     bulk.set_calculator(calc)
 
-    print bulk[0].set('symbol', 'Mg')
-    print bulk[1].set('symbol', 'Fe')
+    bulk[0].set('symbol', 'Mg')
+    bulk[1].set('symbol', 'Fe')
 
     # Ininit
     epa0 = bulk.get_potential_energy() / bulk.get_number_of_atoms()
     vpa0 = bulk.get_volume() / bulk.get_number_of_atoms()
     print "epa0:", epa0
     print "vpa0:", vpa0, "\n"
+    print 'a0 %f\n'% (bulk.get_cell()[0][0])
 
    
     # Optimization
     FIRE(UnitCellFilter(bulk, mask=[1,1,1,0,0,0]),\
-            logfile='FIRE.log').run(fmax=0.005)
+            logfile='FIRE.log').run(fmax=0.001)
 
     epaf = bulk.get_potential_energy() / bulk.get_number_of_atoms()
     vpaf = bulk.get_volume() / bulk.get_number_of_atoms()
@@ -54,6 +53,8 @@ if __name__ == '__main__':
     print "FIRE vpaf:", vpaf, "\n"
 
     opt_cell = bulk.get_cell()
+
+    print 'a0 %f\n'% (opt_cell[0][0])
 
     # reoptimize/check volume
     #

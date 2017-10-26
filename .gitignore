@@ -22,3 +22,6 @@ eam_tabulate*
 restart*
 *.pdf
 *.eam
+*~
+*.dump
+in.*
