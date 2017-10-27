@@ -25,3 +25,4 @@ restart*
 *~
 *.dump
 in.*
+*.sw
