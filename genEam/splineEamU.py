@@ -102,7 +102,7 @@ def main():
             eamPotentials,
             pairPotentials,
             out= outfile,
-            comments=['Buckingham Uranium as U.eam','',''])
+            comments=['Spline Uranium as U.eam','',''])
 
 if __name__ == "__main__":
   main()

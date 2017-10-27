@@ -21,6 +21,14 @@ pot_eam='''
 pair_style eam/alloy 
 pair_coeff * * U2.eam U 
 '''
+pot_eam_zhou='''
+### interactions 
+pair_style eam/alloy 
+pair_coeff * * Zhou_ZrAl.setfl Zr 
+'''
+
+
+
 
 pot_meam='''
 ### interactions
@@ -87,7 +95,7 @@ if __name__ == '__main__':
     b0 = a0 / 2.0
     size = 3
 
-    potential = pot_meam
+    potential = pot_eam
 
     bulk = Atoms(['Al']*4,
                      positions=[(0,0,0),(b0,b0,0),(b0,0,b0),(0,b0,b0)],
@@ -100,8 +108,8 @@ if __name__ == '__main__':
             pbc=(1,1,1), latticeconstant=a0 )
 
     '''
-    bulk[0].set('symbol', 'Mg')
-    bulk[1].set('symbol', 'Fe')
+    #bulk[0].set('symbol', 'Zr')
+    #bulk[1].set('symbol', 'Fe')
 
 
 
@@ -127,7 +135,7 @@ if __name__ == '__main__':
     volumes = []
     energies = []
     cwll = bulk.get_cell()
-    for x in np.linspace(0.85, 1.15, 40):
+    for x in np.linspace(0.75, 1.35, 40):
         cell = cwll * x
         bulk.set_cell(cell, scale_atoms=True)
         system, elements = am.convert.ase_Atoms.load(bulk)
@@ -145,13 +153,15 @@ if __name__ == '__main__':
         volumes.append(Lx*Ly*Lz / Atoms)
         energies.append(PotEng / Atoms)
 
+    import matplotlib.pyplot as plt
+
+    plt.plot(volumes, energies)
+    plt.show()
+    '''
     eos = EquationOfState(volumes, energies)
     vpaf, epaf, B1 = eos.fit()
     print "EOS vpaf:", vpaf, "A^3"
     print "EOS epaf:", epaf, "eV"
     print "EOS B1:", B1 / kJ * 1.0e24, "GPa"
+    '''
 
-    import matplotlib.pyplot as plt
-
-    plt.plot(volumes, energies)
-    plt.show()
