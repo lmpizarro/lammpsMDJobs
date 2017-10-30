@@ -69,6 +69,3 @@ def create_in(atoms_lmps, interaction, fix):
 
     with open('in.min', 'w') as inscript:
          inscript.write( in_lammps )
-
-
-
