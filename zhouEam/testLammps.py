@@ -4,7 +4,27 @@ import atomman as am
 import random
 
 import genSetFlEamZhou as zhou
-import parseLogs
+import sys
+sys.path.append('../../pizza/src')
+
+from log import log
+
+keys_thermo = ['Step', 'Press','PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
+
+def get_vars2(LOG):
+    lg = log(LOG)
+    status = {}
+
+    for k in keys_thermo:
+        a =  lg.get(k)
+        i = len(a) - 1 
+        status[k] = a[i]
+
+    Lx = status['Lx']
+    PotEng = status['PotEng']
+    Atoms = status['Atoms']
+
+    return (Lx, PotEng / Atoms, Atoms)
 
 fix_min='''
 fix 1 all box/relax iso 0.0 vmax 0.001
@@ -44,11 +64,13 @@ def create_in(data_lmps, interaction, fix):
 import math
 
 lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
-if __name__ == '__main__':
+
+
+def test_01():
     ES = ['Al', 'Nb','Cr']
 
-    c = zhou.calcPotentials(ES)
-    c.createPot()
+    potZhou = zhou.calcPotentials(ES)
+    potZhou.createPot()
 
     atomsPerCell = 4
     a0 = 4.1
@@ -81,7 +103,6 @@ if __name__ == '__main__':
 
     print formula, nL
 
-    from ase.lattice.cubic import FaceCenteredCubic
     alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],\
             size=(nL,nL,nL), symbol=ES[0],\
             pbc=(1,1,1), latticeconstant=a0 )
@@ -95,12 +116,14 @@ if __name__ == '__main__':
     system, elements = am.convert.ase_Atoms.load(alloy)
     system_info = lmp.atom_data.dump(system, lamp_data , units='metal')
     
-    create_in(lamp_data, c.getEam(), fix_min)
+    create_in(lamp_data, potZhou.getEam(), fix_min)
     output = lmp.run(lammps_exe, in_name, return_style='object')
 
-    status = parseLogs.get_vars2('log.lammps')
-    Lx = status['Lx']
-    PotEng = status['PotEng']
-    Atoms = status['Atoms']
+    (Lx, PotEng, Atoms) = get_vars2('log.lammps')
+    
 
-    print Lx / nCells, PotEng/Atoms, Atoms, a0
+    print Lx / nCells, PotEng, Atoms, a0
+
+
+if __name__ == '__main__':
+    test_01()
