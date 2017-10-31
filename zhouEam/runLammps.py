@@ -235,17 +235,11 @@ class DataLammps():
         [[self.t1_.append(e) for e in [i+1]*self.mult] \
                 for i in range(self.nTypes)]
 
-        self.px=[]
-        self.py=[]
-        self.pz=[]
         self.pos =[]
         for i in range(self.nAt):
             x = random.random() * Lx
             y = random.random() * Ly
             z = random.random() * Lz
-            self.px.append (x )
-            self.py.append (y)
-            self.pz.append (z)
             self.pos.append([x,y,z])
 
         return self.pos, self.t1_, self.box
@@ -258,7 +252,6 @@ def test_01():
     rL = RunLammps(elements)
     rL.setDataLmp(data_lmp)
     rL.create_in(in_lmp)
-
 
     dL = DataLammps(elements, 50)
     dL.setRandomPositions()
