@@ -1,6 +1,7 @@
 import sys
 import ase
 from ase.units import _Nav, kB, kJ
+# http://www.reflectometry.org/danse/elements.html
 import periodictable as pt
 import mendeleev as mdlv
 
@@ -83,17 +84,49 @@ def test_lj():
         print (e, calc_lj_01(e))
 
 
-
-class RunLammps():
-    keys_thermo = ['Step', 'Press','PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
-    def __init__(self, elements):
-
+class System():
+    def __init__(self, setting):
         self.atoms = []
+
+        elements = setting['elements']
 
         for e in elements:
             a = ase.Atom(e)
             mass = a.mass / _Nav
-            self.atoms.append({'ase':a, 'mass': mass })
+
+            form = pt.formula(a.symbol)
+            e_ = form.structure[0][1]
+            crys = e_.crystal_structure['symmetry'] 
+            a_ = e_.crystal_structure['a'] 
+            self.atoms.append({'ase':a, 'mass': mass, 'structure': crys, 'a':a_ })
+        print self.atoms
+
+
+    def getAtoms(self):
+        return self.atoms
+
+    def basicInteraction (self):
+        str_ = 'pair_style lj/cut 7\n'
+     
+        for i,e in enumerate(self.atoms):
+            el = e['ase'].symbol
+            paramsLJ = calc_lj_01(el)
+            # eps sigma cut
+            coefPair = '  ' + str(paramsLJ['epsilon']) + ' ' +\
+                    str(paramsLJ['sigma']) + '  ' + \
+                    str(paramsLJ['sigma'] * 1.5) +  '\n'
+            j = i + 1
+            str_ += 'pair_coeff ' + str(j) + ' ' + str(j) + coefPair 
+
+        return str_
+
+
+class RunLammps():
+    def __init__(self, system):
+        self.system = system
+        self.keys_thermo = ['Step', 'Press','PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
+
+        self.atoms = system.getAtoms() 
 
         self.in_frame =''' 
             clear
@@ -123,27 +156,11 @@ class RunLammps():
             min_style cg
             minimize 1e-15 1e-15 50000 50000
         '''
-        self.defInteraction = self.defInteraction()
+        self.defInteraction = self.system.basicInteraction()
         self.in_frame = self.formatMultiline(self.in_frame)
         self.fix = self.formatMultiline(self.fix_min)
         self.interaction = self.formatMultiline(self.defInteraction)
 
-
-    def defInteraction (self):
-        str_ = 'pair_style lj/cut 7\n'
-     
-        for i,e in enumerate(self.atoms):
-            el = e['ase'].symbol
-            paramsLJ = calc_lj_01(el)
-            # eps sigma cut
-            coefPair = '  ' + str(paramsLJ['epsilon']) + ' ' +\
-                    str(paramsLJ['sigma']) + '  ' + \
-                    str(paramsLJ['sigma'] * 1.5) +  '\n'
-
-            j = i + 1
-            str_ += 'pair_coeff ' + str(j) + ' ' + str(j) + coefPair 
-
-        return str_
 
     def getMasess(self):
         str_ =''
@@ -157,7 +174,7 @@ class RunLammps():
         lg = log(LOG)
         status = {}
 
-        for k in keys_thermo:
+        for k in self.keys_thermo:
             a =  lg.get(k)
             i = len(a) - 1 
             status[k] = a[i]
@@ -193,13 +210,22 @@ class RunLammps():
         self.fix = fix
 
 class DataLammps():
-    def __init__(self, elements, mult, size=[10.0,10.0,10.0]):
+    def __init__(self, settings, mult, size=[10.0,10.0,10.0]):
+        self.settings = settings
+        elements = settings['elements']
         self.pos = None
         self.t1_ = None
         self.mult = mult
         self.nTypes = len(elements) 
         self.nAt = len(elements) * mult 
         self.box =[[0, size[0]],[0, size[1]],[0, size[2]]]
+
+        if self.settings['structure'] == 'random':
+            self.setRandomPositions()
+        else:
+            print 'no implemented'
+            sys.exit(0)
+
 
     def genFile(self, fileName):
         self.str_ = '\n'
@@ -217,7 +243,6 @@ class DataLammps():
         self.str_ +='\n'
         self.str_ +='Atoms\n'
         self.str_ +='\n'
-
 
         for i,e in enumerate(self.pos):
             self.str_ += str(i +1) + '  ' +   str(self.t1_[i]) + ' ' +\
@@ -248,14 +273,24 @@ def test_01():
 
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
-    elements = ['Zr', 'Fe', 'Al', 'Mo']
-    rL = RunLammps(elements)
+
+    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], 'structure':'random'}
+
+    sys = System(setting)
+
+    rL = RunLammps(sys)
     rL.setDataLmp(data_lmp)
     rL.create_in(in_lmp)
 
-    dL = DataLammps(elements, 50)
-    dL.setRandomPositions()
+    dL = DataLammps(setting, 50)
     dL.genFile(data_lmp)
+
+    import atomman.lammps as lmp
+    output = lmp.run(lammps_exe, in_lmp, return_style='object')
+
+    (Lx, PotEng, Atoms) = rL.get_vals('log.lammps')
+    print Lx, PotEng, Atoms
+
 
 if __name__ == '__main__':
     test_01()
