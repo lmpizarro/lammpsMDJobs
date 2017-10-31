@@ -9,6 +9,8 @@ sys.path.append('../../pizza/src')
 from log import log
 import math
 
+import random
+
 lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
 
 JOULE_TO_EV = kJ / 1000
@@ -70,6 +72,7 @@ def calc_lj_01 (element):
         #epsilon = data['fusion_heat']  * 0.843
 
     return ({'epsilon': epsilon, 'sigma':sigma})
+
 
 def test_lj():
     elements = ['U', 'Fe', 'Mo','V', 'Cr','Cu', 'Ni', 'Al',\
@@ -189,14 +192,77 @@ class RunLammps():
     def setFix(self, fix):
         self.fix = fix
 
+class DataLammps():
+    def __init__(self, elements, mult, size=[10.0,10.0,10.0]):
+        self.pos = None
+        self.t1_ = None
+        self.mult = mult
+        self.nTypes = len(elements) 
+        self.nAt = len(elements) * mult 
+        self.box =[[0, size[0]],[0, size[1]],[0, size[2]]]
+
+    def genFile(self, fileName):
+        self.str_ = '\n'
+        self.str_ += str(self.nAt) + ' atoms\n'
+        self.str_ += str(self.nTypes) + ' atom types\n'
+        xlo = self.box[0][0]
+        xhi = self.box[0][1]
+        ylo = self.box[1][0]
+        yhi = self.box[1][1]
+        zlo = self.box[2][0]
+        zhi = self.box[2][1]
+        self.str_ += str(float(xlo)) + ' ' +str(xhi)+ '  ' + ' xlo xhi\n'
+        self.str_ += str(float(ylo)) + ' ' +str(yhi)+ '  ' + ' ylo yhi\n'
+        self.str_ += str(float(zlo)) + ' ' +str(zhi)+ '  ' + ' zlo zhi\n'
+        self.str_ +='\n'
+        self.str_ +='Atoms\n'
+        self.str_ +='\n'
+
+
+        for i,e in enumerate(self.pos):
+            self.str_ += str(i +1) + '  ' +   str(self.t1_[i]) + ' ' +\
+                    str(e[0]) + ' ' + str(e[1])+ ' '  + str(e[2]) + '\n'
+        with open(fileName, 'w') as inscript:
+            inscript.write( self.str_)
+
+
+    def setRandomPositions(self):
+        Lx = self.box[0][1]
+        Ly = self.box[1][1]
+        Lz = self.box[2][1]
+
+        self.t1_ = []
+        [[self.t1_.append(e) for e in [i+1]*self.mult] \
+                for i in range(self.nTypes)]
+
+        self.px=[]
+        self.py=[]
+        self.pz=[]
+        self.pos =[]
+        for i in range(self.nAt):
+            x = random.random() * Lx
+            y = random.random() * Ly
+            z = random.random() * Lz
+            self.px.append (x )
+            self.py.append (y)
+            self.pz.append (z)
+            self.pos.append([x,y,z])
+
+        return self.pos, self.t1_, self.box
+
 def test_01():
+
+    data_lmp = 'data.lmp'
+    in_lmp = 'in.min'
     elements = ['Zr', 'Fe', 'Al', 'Mo']
     rL = RunLammps(elements)
-    print rL.getMasess()
-    rL.setDataLmp('data.lmp')
-    rL.create_in('in.min')
-    pass
+    rL.setDataLmp(data_lmp)
+    rL.create_in(in_lmp)
 
+
+    dL = DataLammps(elements, 50)
+    dL.setRandomPositions()
+    dL.genFile(data_lmp)
 
 if __name__ == '__main__':
     test_01()
