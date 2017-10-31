@@ -11,7 +11,7 @@ from log import log
 
 keys_thermo = ['Step', 'Press','PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
 
-def get_vars2(LOG):
+def get_vals(LOG):
     lg = log(LOG)
     status = {}
 
@@ -67,7 +67,7 @@ lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
 
 
 def test_01():
-    ES = ['Al', 'Nb','Cr']
+    ES = ['Ni', 'Nb','Cr']
 
     potZhou = zhou.calcPotentials(ES)
     potZhou.createPot()
@@ -119,7 +119,7 @@ def test_01():
     create_in(lamp_data, potZhou.getEam(), fix_min)
     output = lmp.run(lammps_exe, in_name, return_style='object')
 
-    (Lx, PotEng, Atoms) = get_vars2('log.lammps')
+    (Lx, PotEng, Atoms) = get_vals('log.lammps')
     
 
     print Lx / nCells, PotEng, Atoms, a0
