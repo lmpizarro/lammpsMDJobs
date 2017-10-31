@@ -121,7 +121,7 @@ class RunLammps():
         self.fix_min='''
             fix 1 all box/relax iso 0.0 vmax 0.001
             min_style cg
-            minimize 1e-15 1e-15 5000 5000
+            minimize 1e-15 1e-15 50000 50000
         '''
         self.defInteraction = self.defInteraction()
         self.in_frame = self.formatMultiline(self.in_frame)
