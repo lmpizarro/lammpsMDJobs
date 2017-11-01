@@ -113,11 +113,17 @@ class DataLammps():
         print self.settings['structure']
         if self.settings['structure'] == 'rnd':
             print 'rnd implemented'
+            self.genRandomPositions()
+
+            self.genStructure()
+ 
             self.setRandomStructure()
         if self.settings['structure'] == 'fcc':
             self.setFcc()
-            print 'fcc no implemented'
-            sys.exit(0)
+            print 'fcc implemented'
+
+            if self.settings['positions'] == 'rnd':
+                self.setRandomStructure()
         if self.settings['structure'] == 'bcc':
             print 'bcc no implemented'
             sys.exit(0)
@@ -151,16 +157,13 @@ class DataLammps():
         print 'Generated: ', fileName
 
 
-    def setRandomStructure(self):
-
-        self.genRandomPositions()
-
+    def genStructure(self):
         self.t1_ = []
 
         for i,e in enumerate(self.settings['nAt']):
             [self.t1_.append(i+1) for j in range(e)]
-                
-
+ 
+    def setRandomStructure(self):
         x = [int(random.random()*len(self.t1_)) for i in range(len(self.t1_))]
 
         for i in range(len(x) - 1):
@@ -194,10 +197,21 @@ class DataLammps():
                                         size=(px,py,pz), symbol='Cu',
                 pbc=(1,1,1), latticeconstant=a)
 
-        print alloy
+        nAtoms =  alloy.get_number_of_atoms()
         print self.settings['pca']
+       
+        t = 0
+        for i,p in enumerate(self.settings['pca']):
 
+            nA = int(p * nAtoms / 100.0)
+            t +=nA
+            self.settings['nAt'][i] = nA
+        self.settings['nAt'][i] = nA+  nAtoms - t
 
+        self.genStructure()
+
+        self.pos = alloy.get_positions()
+        self.nAt = nAtoms
 
 def test_01():
 
@@ -207,7 +221,7 @@ def test_01():
     setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'],\
               'pca':[10, 10, 10], 'nAtoms':250,\
               'structure':'fcc',\
-              'positions':'rnd','a':3.0, 'period':[4,4,4]}
+              'positions':'rnd','a':5.0, 'period':[4,4,4]}
 
     sys = system.System(setting)
 
