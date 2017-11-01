@@ -141,7 +141,7 @@ class RunLammps():
         self.fix = fix
 
 class DataLammps():
-    def __init__(self, settings, mult, size=[10.0,10.0,10.0]):
+    def __init__(self, settings, mult=10, size=[10.0,10.0,10.0]):
         self.settings = settings
         elements = settings['elements']
         self.pos = None
@@ -150,13 +150,19 @@ class DataLammps():
         self.nTypes = len(elements) 
         self.nAt = len(elements) * mult 
         self.box =[[0, size[0]],[0, size[1]],[0, size[2]]]
-
+        print self.settings['structure']
         if self.settings['structure'] == 'rnd':
-            self.setRandomPositions()
-        else:
-            print 'no implemented'
+            print 'rnd implemented'
+            self.setRandomStructure()
+        if self.settings['structure'] == 'fcc':
+            print 'fcc no implemented'
             sys.exit(0)
-
+        if self.settings['structure'] == 'bcc':
+            print 'bcc no implemented'
+            sys.exit(0)
+        if self.settings['structure'] == 'hcp':
+            print 'hcp no implemented'
+            sys.exit(0)
 
     def genFile(self, fileName):
         self.str_ = '\n'
@@ -181,15 +187,32 @@ class DataLammps():
         with open(fileName, 'w') as inscript:
             inscript.write( self.str_)
 
+        print 'Generated: ', fileName
 
-    def setRandomPositions(self):
-        Lx = self.box[0][1]
-        Ly = self.box[1][1]
-        Lz = self.box[2][1]
+
+    def setRandomStructure(self):
+
+        self.genRandomPositions()
 
         self.t1_ = []
         [[self.t1_.append(e) for e in [i+1]*self.mult] \
                 for i in range(self.nTypes)]
+
+        x = [int(random.random()*len(self.t1_)) for i in range(len(self.t1_))]
+
+        for i in range(len(x) - 1):
+            t1 = self.t1_[x[i]]
+            t2 = self.t1_[x[i+1]]
+
+            self.t1_[x[i]] = t2
+            self.t1_[x[i+1]] = t1
+            
+        return self.pos, self.t1_, self.box
+
+    def genRandomPositions(self):
+        Lx = self.box[0][1]
+        Ly = self.box[1][1]
+        Lz = self.box[2][1]
 
         self.pos =[]
         for i in range(self.nAt):
@@ -198,14 +221,15 @@ class DataLammps():
             z = random.random() * Lz
             self.pos.append([x,y,z])
 
-        return self.pos, self.t1_, self.box
 
 def test_01():
 
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], 'structure':'rnd'}
+    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], \
+                'structure':'rnd',\
+                'positions':'rnd'}
 
     sys = System(setting)
 
@@ -213,7 +237,7 @@ def test_01():
     rL.setDataLmp(data_lmp)
     rL.create_in(in_lmp)
 
-    dL = DataLammps(setting, 50)
+    dL = DataLammps(setting)
     dL.genFile(data_lmp)
 
     import atomman.lammps as lmp
