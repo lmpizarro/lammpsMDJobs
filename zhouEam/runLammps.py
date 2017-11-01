@@ -12,7 +12,9 @@ class RunLammps():
         self.system = system
         self.keys_thermo = ['Step', 'Press','PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
 
-        self.atoms = system.getAtoms() 
+        self.atoms = system.getAtoms()
+
+        self.log = 'log.lammps'
 
         self.in_frame =''' 
             clear
@@ -42,7 +44,7 @@ class RunLammps():
             min_style cg
             minimize 1e-15 1e-15 50000 50000
         '''
-        self.defInteraction = self.system.basicInteraction()
+        self.defInteraction = self.system.Interaction()
         self.in_frame = self.formatMultiline(self.in_frame)
         self.fix = self.formatMultiline(self.fix_min)
         self.interaction = self.formatMultiline(self.defInteraction)
@@ -56,8 +58,8 @@ class RunLammps():
             i+=1
         return  str_
 
-    def get_vals(self, LOG):
-        lg = log(LOG)
+    def get_vals(self):
+        lg = log(self.log)
         status = {}
 
         for k in self.keys_thermo:
@@ -81,6 +83,8 @@ class RunLammps():
     def create_in(self, fileName):
         mass = self.getMasess()
 
+        self.in_lmp = fileName
+
         in_lammps = self.in_frame % (self.data_lmps, self.interaction, mass, self.fix)
 
         with open(fileName, 'w') as inscript:
@@ -94,6 +98,11 @@ class RunLammps():
 
     def setFix(self, fix):
         self.fix = fix
+
+    def run(self):
+        import atomman.lammps as lmp
+        output = lmp.run(lammps_exe, self.in_lmp, return_style='object')
+
 
 class DataLammps():
     def __init__(self, settings):
@@ -230,7 +239,7 @@ def test_01():
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'],\
+    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], 'pot':'lj', \
               'pca':[10, 10, 10], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
@@ -247,12 +256,10 @@ def test_01():
     dL = DataLammps(setting)
     dL.genFile(data_lmp)
 
-    import atomman.lammps as lmp
-    output = lmp.run(lammps_exe, in_lmp, return_style='object')
+    rL.run()
 
-    (Lx, PotEng, Atoms) = rL.get_vals('log.lammps')
+    (Lx, PotEng, Atoms) = rL.get_vals()
     print Lx, PotEng, Atoms
-
 
 if __name__ == '__main__':
     test_01()

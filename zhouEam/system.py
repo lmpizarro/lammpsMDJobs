@@ -2,6 +2,8 @@ import ase
 from ase.units import _Nav#, kB, kJ
 import periodictable as pt
 import ljParameters
+import genSetFlEamZhou as zhou
+import sys
 
 class System():
     def __init__(self, setting):
@@ -25,10 +27,14 @@ class System():
     def getAtoms(self):
         return self.atoms
 
-    def basicInteraction (self):
-        ljp = ljParameters.LjParameters()
-
-        str_ = ljp.lammpsInteraction(self.atoms)
+    def Interaction (self):
+        if self.setting['pot'] == 'lj':
+            ljp = ljParameters.LjParameters()
+            str_ = ljp.lammpsInteraction(self.atoms)
+        if self.setting['pot'] == 'zhou':
+            gz = zhou.calcPotentials(self.setting['elements'])
+            print "TODO: not yet implemented"
+            str_ = gz.getEam()
 
         return str_
 
@@ -47,10 +53,14 @@ class System():
         self.setting['nAt'] = nAt
 
 def test_01():
-    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'],\
+    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], 'pot':'zhou',\
               'pca':[10, 10, 10], 'nAtoms':250,\
-              'structure':'rnd',\
-              'positions':'rnd','a':3.0, 'period':[4,4,4]}
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
+              'structure':'fcc',\
+              'positions':'rnd','a':4.0, 'period':[4,4,4]}
+
 
     sys = System(setting)
     print sys.setting['elements']
@@ -58,8 +68,9 @@ def test_01():
     print sys.setting['pca']
     print sys.atoms
 
+    print sys.Interaction()
 
-    pass
+
 
 if __name__ == '__main__':
     test_01()

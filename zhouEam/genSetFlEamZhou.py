@@ -44,6 +44,13 @@ class calcPotentials():
 
             self.myParameters[e]['pair']=pair_E1E1
 
+        self.fileName = 'Zhou_'
+        for e in self.ES:
+            self.fileName +=e
+        self.comment = self.fileName
+        self.fileName += '.setfl'
+
+
         #print self.myParameters
 
     def makeFunc(self, a, b, r_e, c):
@@ -129,13 +136,6 @@ class calcPotentials():
         return str_
 
     def createPot(self):
-        pass
-        self.fileName = 'Zhou_'
-        for e in self.ES:
-            self.fileName +=e
-        comment = self.fileName
-        self.fileName += '.setfl'
-
         eamPotentials = self.getEamPotentials()
         pairPotentials = self.getPairPotentials()
 
@@ -146,7 +146,7 @@ class calcPotentials():
             eamPotentials,
             pairPotentials,
             out = outfile,
-            comments = [comment, "", ""]) # <-- Note: title lines given as list of three strings
+            comments = [self.comment, "", ""]) # <-- Note: title lines given as list of three strings
 
     def getEam(self):
         str_ = 'pair_style eam/alloy\n'
