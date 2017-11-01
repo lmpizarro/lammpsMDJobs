@@ -67,7 +67,7 @@ lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
 
 
 def test_01():
-    ES = ['Ni', 'Nb','Cr']
+    ES = ['Zr', 'Fe','Al', 'Mo']
 
     potZhou = zhou.calcPotentials(ES)
     potZhou.createPot()
