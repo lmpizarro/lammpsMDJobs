@@ -1,56 +1,11 @@
 import sys
-from ase.units import _Nav#, kB, kJ
-import periodictable as pt
-import ase
 sys.path.append('../../pizza/src')
-
-import ljParameters
-
 from log import log
-import math
 
+import system
 import random
 
 lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
-
-class System():
-    def __init__(self, setting):
-        self.atoms = []
-
-        elements = setting['elements']
-
-        for e in elements:
-            a = ase.Atom(e)
-            mass = a.mass / _Nav
-
-            form = pt.formula(a.symbol)
-            e_ = form.structure[0][1]
-            crys = e_.crystal_structure['symmetry'] 
-            a_ = e_.crystal_structure['a'] 
-            self.atoms.append({'ase':a, 'mass': mass, 'structure': crys, 'a':a_ })
-        print self.atoms
-
-
-    def getAtoms(self):
-        return self.atoms
-
-    def basicInteraction (self):
-        self.ljp = ljParameters.LjParameters()
-
-        str_ = 'pair_style lj/cut 7\n'
-     
-        for i,e in enumerate(self.atoms):
-            el = e['ase'].symbol
-            paramsLJ = self.ljp.calc_lj_01(el)
-            # eps sigma cut
-            coefPair = '  ' + str(paramsLJ['epsilon']) + ' ' +\
-                    str(paramsLJ['sigma']) + '  ' + \
-                    str(paramsLJ['sigma'] * 1.5) +  '\n'
-            j = i + 1
-            str_ += 'pair_coeff ' + str(j) + ' ' + str(j) + coefPair 
-
-        return str_
-
 
 class RunLammps():
     def __init__(self, system):
@@ -141,20 +96,26 @@ class RunLammps():
         self.fix = fix
 
 class DataLammps():
-    def __init__(self, settings, mult=10, size=[10.0,10.0,10.0]):
+    def __init__(self, settings):
+
         self.settings = settings
         elements = settings['elements']
+        self.nTypes = len(elements) 
+
+        self.nAt = settings['nAtoms']
+
         self.pos = None
         self.t1_ = None
-        self.mult = mult
-        self.nTypes = len(elements) 
-        self.nAt = len(elements) * mult 
-        self.box =[[0, size[0]],[0, size[1]],[0, size[2]]]
+
+        per = settings['period']
+        a = settings['a']
+        self.box =[[0, per[0]*a],[0, per[1]*a],[0, per[2]*a]]
         print self.settings['structure']
         if self.settings['structure'] == 'rnd':
             print 'rnd implemented'
             self.setRandomStructure()
         if self.settings['structure'] == 'fcc':
+            self.setFcc()
             print 'fcc no implemented'
             sys.exit(0)
         if self.settings['structure'] == 'bcc':
@@ -195,8 +156,10 @@ class DataLammps():
         self.genRandomPositions()
 
         self.t1_ = []
-        [[self.t1_.append(e) for e in [i+1]*self.mult] \
-                for i in range(self.nTypes)]
+
+        for i,e in enumerate(self.settings['nAt']):
+            [self.t1_.append(i+1) for j in range(e)]
+                
 
         x = [int(random.random()*len(self.t1_)) for i in range(len(self.t1_))]
 
@@ -221,17 +184,32 @@ class DataLammps():
             z = random.random() * Lz
             self.pos.append([x,y,z])
 
+    def setFcc(self):
+        px = self.settings['period'][0]
+        py = self.settings['period'][1]
+        pz = self.settings['period'][2]
+        a =  self.settings['a']
+        from ase.lattice.cubic import FaceCenteredCubic
+        alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+                                        size=(px,py,pz), symbol='Cu',
+                pbc=(1,1,1), latticeconstant=a)
+
+        print alloy
+        print self.settings['pca']
+
+
 
 def test_01():
 
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], \
-                'structure':'rnd',\
-                'positions':'rnd'}
+    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'],\
+              'pca':[10, 10, 10], 'nAtoms':250,\
+              'structure':'fcc',\
+              'positions':'rnd','a':3.0, 'period':[4,4,4]}
 
-    sys = System(setting)
+    sys = system.System(setting)
 
     rL = RunLammps(sys)
     rL.setDataLmp(data_lmp)

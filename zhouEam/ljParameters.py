@@ -65,6 +65,24 @@ class LjParameters():
 
         return ({'epsilon': epsilon, 'sigma':sigma})
 
+    def lammpsInteraction(self, atoms):
+        self.atoms = atoms
+
+        str_ = 'pair_style lj/cut 7\n'
+     
+        for i,e in enumerate(self.atoms):
+            el = e['ase'].symbol
+            paramsLJ = self.calc_lj_01(el)
+            # eps sigma cut
+            coefPair = '  ' + str(paramsLJ['epsilon']) + ' ' +\
+                    str(paramsLJ['sigma']) + '  ' + \
+                    str(paramsLJ['sigma'] * 1.5) +  '\n'
+            j = i + 1
+            str_ += 'pair_coeff ' + str(j) + ' ' + str(j) + coefPair 
+
+        return str_
+
+
 
 def test_lj():
     ljp = LjParameters()
