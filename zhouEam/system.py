@@ -12,9 +12,6 @@ class System():
 
         self.calcAtoms()
 
-        print self.setting['elements']
-        print self.setting['nAt']
-
         for e in elements:
             a = ase.Atom(e)
             mass = a.mass / _Nav
@@ -24,7 +21,6 @@ class System():
             crys = e_.crystal_structure['symmetry'] 
             a_ = e_.crystal_structure['a'] 
             self.atoms.append({'ase':a, 'mass': mass, 'structure': crys, 'a':a_ })
-        print self.atoms
 
     def getAtoms(self):
         return self.atoms
@@ -50,8 +46,6 @@ class System():
         self.setting['pca'].append(100-sumpc)
         self.setting['nAt'] = nAt
 
-
-
 def test_01():
     setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'],\
               'pca':[10, 10, 10], 'nAtoms':250,\
@@ -59,6 +53,11 @@ def test_01():
               'positions':'rnd','a':3.0, 'period':[4,4,4]}
 
     sys = System(setting)
+    print sys.setting['elements']
+    print sys.setting['nAt']
+    print sys.setting['pca']
+    print sys.atoms
+
 
     pass
 

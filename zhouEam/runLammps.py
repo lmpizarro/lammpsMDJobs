@@ -110,7 +110,7 @@ class DataLammps():
         per = settings['period']
         a = settings['a']
         self.box =[[0, per[0]*a],[0, per[1]*a],[0, per[2]*a]]
-        print self.settings['structure']
+
         if self.settings['structure'] == 'rnd':
             print 'rnd implemented'
             self.genRandomPositions()
@@ -119,14 +119,18 @@ class DataLammps():
  
             self.setRandomStructure()
         if self.settings['structure'] == 'fcc':
-            self.setFcc()
+            self.setCrystal('fcc')
             print 'fcc implemented'
 
             if self.settings['positions'] == 'rnd':
                 self.setRandomStructure()
         if self.settings['structure'] == 'bcc':
+            self.setCrystal('bcc')
+
+            if self.settings['positions'] == 'rnd':
+                self.setRandomStructure()
             print 'bcc no implemented'
-            sys.exit(0)
+            #sys.exit(0)
         if self.settings['structure'] == 'hcp':
             print 'hcp no implemented'
             sys.exit(0)
@@ -187,18 +191,26 @@ class DataLammps():
             z = random.random() * Lz
             self.pos.append([x,y,z])
 
-    def setFcc(self):
+    def setCrystal(self, crys):
         px = self.settings['period'][0]
         py = self.settings['period'][1]
         pz = self.settings['period'][2]
         a =  self.settings['a']
-        from ase.lattice.cubic import FaceCenteredCubic
-        alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+
+        if crys == 'fcc':
+            from ase.lattice.cubic import FaceCenteredCubic
+            alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
                                         size=(px,py,pz), symbol='Cu',
-                pbc=(1,1,1), latticeconstant=a)
+                    pbc=(1,1,1), latticeconstant=a)
+
+        if crys == 'bcc':
+            from ase.lattice.cubic import BodyCenteredCubic
+            alloy = BodyCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+                                        size=(px,py,pz), symbol='Cu',
+                    pbc=(1,1,1), latticeconstant=a)
 
         nAtoms =  alloy.get_number_of_atoms()
-        print self.settings['pca']
+ 
        
         t = 0
         for i,p in enumerate(self.settings['pca']):
@@ -220,8 +232,11 @@ def test_01():
 
     setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'],\
               'pca':[10, 10, 10], 'nAtoms':250,\
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
               'structure':'fcc',\
-              'positions':'rnd','a':5.0, 'period':[4,4,4]}
+              'positions':'rnd','a':4.0, 'period':[4,4,4]}
 
     sys = system.System(setting)
 
