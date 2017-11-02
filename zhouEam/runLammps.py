@@ -60,11 +60,17 @@ class RunLammps():
             i = len(a) - 1 
             status[k] = a[i]
 
-        Lx = status['Lx']
+        nx = self.system.setting['period'][0]
+        ny = self.system.setting['period'][1]
+        nz = self.system.setting['period'][2]
+
+        Lx = status['Lx']/ nx
+        Ly = status['Ly']/ ny
+        Lz = status['Lz']/ nz
         PotEng = status['PotEng']
         Atoms = status['Atoms']
 
-        return (Lx, PotEng / Atoms, Atoms)
+        return (Lx, Ly, Lz, PotEng / Atoms, Atoms)
 
     def formatMultiline(self, multiline):
         l = multiline.split('\n')
@@ -106,13 +112,6 @@ class DataLammps():
         elements = self.settings['elements']
         self.nTypes = len(elements) 
       
-        '''
-        print settings['pca'], (len(elements) - 1)
-        if len(settings['pca']) != (len(elements) - 1):
-            print ('warning bad setting: ')
-            sys.exit(0)
-        '''
-
         self.nAt = self.settings['nAtoms']
 
         self.pos = None
@@ -234,13 +233,13 @@ def test_01():
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Al', 'Fe'], 'pot':'lj', \
-              'pca':[1], 'nAtoms':250,\
+    setting ={'elements':['Pb'], 'pot':'zhou', \
+              'pca':[], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
               'structure':'fcc',\
-              'positions':'rnd','a':4.0, 'period':[4,4,4]}
+              'positions':'rnd','a':4.2, 'period':[5,5,5]}
 
     sys = system.System(setting)
 
@@ -253,8 +252,8 @@ def test_01():
 
     rL.run()
 
-    (Lx, PotEng, Atoms) = rL.get_vals()
-    print Lx, PotEng, Atoms
+    (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
+    print Lx, Ly, Lz, PotEng, Atoms
 
 
 def test_02():
@@ -262,13 +261,13 @@ def test_02():
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Zr', 'Fe', 'Al'], 'pot':'lj', \
+    setting ={'elements':['Zr', 'Fe', 'Al'], 'pot':'zhou', \
               'pca':[10, 10], 'nAtoms':250,\
-              #'structure':'bcc',\
-              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+              'structure':'bcc',\
+              'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
-              'structure':'fcc',\
-              'positions':'rnd','a':4.0, 'period':[4,4,4]}
+              #'structure':'fcc',\
+              #'positions':'rnd','a':4.2, 'period':[4,4,4]}
 
     sys = system.System(setting)
 
@@ -285,5 +284,56 @@ def test_02():
     (Lx, PotEng, Atoms) = rL.get_vals()
     print Lx, PotEng, Atoms
 
+def test_03():
+    import dbEamZhou as dbz
+
+    data_lmp = 'data.lmp'
+    in_lmp = 'in.min'
+
+
+    parameters = dbz.parameters
+
+    fccs = []
+    bccs = []
+    hcps = []
+    for p in parameters:
+        if parameters[p]['struct'] == 'fcc':
+            fccs.append(p)
+        if parameters[p]['struct'] == 'bcc':
+            bccs.append(p)
+        if parameters[p]['struct'] == 'hcp':
+            hcps.append(p)
+
+    for e in bccs:
+        fccs.append(e)
+
+    import periodictable as pt
+    str_ = ''
+    for e in fccs:
+        form = pt.formula(e)
+        a = form.structure[0][1].crystal_structure['a']
+        setting ={'elements':[e], 'pot':'zhou', \
+              'pca':[], 'nAtoms':250,\
+              'structure':parameters[e]['struct'],\
+              'positions':'rnd','a':4.2, 'period':[5,5,5]}
+
+        sys = system.System(setting)
+
+        rL = RunLammps(sys)
+        rL.setDataLmp(data_lmp)
+        rL.create_in(in_lmp)
+
+        dL = DataLammps(sys)
+        dL.genFile(data_lmp)
+
+        rL.run()
+
+        (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
+        pc = 100  * (Lx - a) / a
+        str_ += ('%s %f %f %f %f %f %f %f  \n')%(e, a, pc, Lx, Ly, Lz, PotEng, Atoms)
+
+    print str_
+
+
 if __name__ == '__main__':
-    test_01()
+    test_03()

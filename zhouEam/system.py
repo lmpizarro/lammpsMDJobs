@@ -34,6 +34,7 @@ class System():
         if self.setting['pot'] == 'zhou':
             gz = zhou.calcPotentials(self.setting['elements'])
             print "TODO: not yet implemented"
+            gz.createPot()
             str_ = gz.getEam()
 
         return str_
@@ -42,7 +43,7 @@ class System():
         nAt = []
 
         sum_ = 0
-        sumpc = 0
+        sumpc = 0.0000001
         len_elements = len(self.setting['elements'])
         len_pca = len(self.setting['pca'])
 

@@ -51,6 +51,7 @@ class calcPotentials():
         self.fileName += '.setfl'
 
 
+
         #print self.myParameters
 
     def makeFunc(self, a, b, r_e, c):
