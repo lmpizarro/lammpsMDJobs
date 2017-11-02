@@ -50,13 +50,6 @@ class RunLammps():
         self.interaction = self.formatMultiline(self.defInteraction)
 
 
-    def getMasess(self):
-        str_ =''
-        i = 1
-        for e in self.atoms:
-            str_ += 'mass ' + str(i) + ' ' +str(e['mass']) + '\n'
-            i+=1
-        return  str_
 
     def get_vals(self):
         lg = log(self.log)
@@ -81,7 +74,7 @@ class RunLammps():
         return str_
 
     def create_in(self, fileName):
-        mass = self.getMasess()
+        mass = self.system.getMasess()
 
         self.in_lmp = fileName
 
@@ -105,19 +98,28 @@ class RunLammps():
 
 
 class DataLammps():
-    def __init__(self, settings):
+    def __init__(self, sys):
 
-        self.settings = settings
-        elements = settings['elements']
+        self.sys = sys
+        self.settings = sys.setting
+
+        elements = self.settings['elements']
         self.nTypes = len(elements) 
+      
+        '''
+        print settings['pca'], (len(elements) - 1)
+        if len(settings['pca']) != (len(elements) - 1):
+            print ('warning bad setting: ')
+            sys.exit(0)
+        '''
 
-        self.nAt = settings['nAtoms']
+        self.nAt = self.settings['nAtoms']
 
         self.pos = None
         self.t1_ = None
 
-        per = settings['period']
-        a = settings['a']
+        per = self.settings['period']
+        a = self.settings['a']
         self.box =[[0, per[0]*a],[0, per[1]*a],[0, per[2]*a]]
 
         if self.settings['structure'] == 'rnd':
@@ -172,7 +174,6 @@ class DataLammps():
 
     def genStructure(self):
         self.t1_ = []
-
         for i,e in enumerate(self.settings['nAt']):
             [self.t1_.append(i+1) for j in range(e)]
  
@@ -218,29 +219,23 @@ class DataLammps():
                                         size=(px,py,pz), symbol='Cu',
                     pbc=(1,1,1), latticeconstant=a)
 
-        nAtoms =  alloy.get_number_of_atoms()
- 
-       
-        t = 0
-        for i,p in enumerate(self.settings['pca']):
+        self.settings['nAtoms'] =  alloy.get_number_of_atoms()
 
-            nA = int(p * nAtoms / 100.0)
-            t +=nA
-            self.settings['nAt'][i] = nA
-        self.settings['nAt'][i] = nA+  nAtoms - t
+        self.sys.calcAtoms2()
 
         self.genStructure()
 
         self.pos = alloy.get_positions()
-        self.nAt = nAtoms
+        self.nAt = self.settings['nAtoms']
+
 
 def test_01():
 
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Zr', 'Fe', 'Al', 'Mo'], 'pot':'lj', \
-              'pca':[10, 10, 10], 'nAtoms':250,\
+    setting ={'elements':['Al', 'Fe'], 'pot':'lj', \
+              'pca':[1], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
@@ -253,7 +248,36 @@ def test_01():
     rL.setDataLmp(data_lmp)
     rL.create_in(in_lmp)
 
-    dL = DataLammps(setting)
+    dL = DataLammps(sys)
+    dL.genFile(data_lmp)
+
+    rL.run()
+
+    (Lx, PotEng, Atoms) = rL.get_vals()
+    print Lx, PotEng, Atoms
+
+
+def test_02():
+
+    data_lmp = 'data.lmp'
+    in_lmp = 'in.min'
+
+    setting ={'elements':['Zr', 'Fe', 'Al'], 'pot':'lj', \
+              'pca':[10, 10], 'nAtoms':250,\
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
+              'structure':'fcc',\
+              'positions':'rnd','a':4.0, 'period':[4,4,4]}
+
+    sys = system.System(setting)
+
+    rL = RunLammps(sys)
+
+    rL.setDataLmp(data_lmp)
+    rL.create_in(in_lmp)
+
+    dL = DataLammps(sys)
     dL.genFile(data_lmp)
 
     rL.run()

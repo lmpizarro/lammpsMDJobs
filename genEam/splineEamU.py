@@ -52,11 +52,14 @@ def main():
   pairPotentials = [ Potential('U', 'U', pair_UU) ]
 
   cutoff = 8.0
-  nrho = 962 # n points density
-  drho = 0.00103950 # distance points density
+  #nrho = 962 # n points density
+  nrho = 5000 # n points density
+  #drho = 0.00103950 # distance points density
+  drho = 0.02 # distance points density
 
-  nr = 1462 # n points embed & Vpair
-  dr = cutoff / 1462.0 # distance points embed & Vpair
+  #nr = 1462 # n points embed & Vpair
+  nr = 5000 # n points embed & Vpair
+  dr = cutoff / nr # distance points embed & Vpair
 
   from atsim.potentials import writeFuncFL
 
