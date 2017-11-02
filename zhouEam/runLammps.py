@@ -233,7 +233,7 @@ def test_01():
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
-    setting ={'elements':['Pb'], 'pot':'zhou', \
+    setting ={'elements':['Al'], 'pot':'zhou', \
               'pca':[], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}

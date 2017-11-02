@@ -41,12 +41,12 @@ variable a equal 5.43
 
 boundary	p p p
 
-lattice         diamond $a
-region		box prism 0 2.0 0 3.0 0 4.0 0.0 0.0 0.0
-create_box	1 box
-create_atoms	1 box
+#lattice         diamond $a
+#region		box prism 0 2.0 0 3.0 0 4.0 0.0 0.0 0.0
+#create_box	1 box
+#create_atoms	1 box
 
-#read_data Al4.lmp
+read_data data.lmp
 #read_data atom.dat
 
 # Need to set mass to something, just to satisfy LAMMPS

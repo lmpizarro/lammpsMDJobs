@@ -8,8 +8,12 @@
 #pair_style meam 
 #pair_coeff * * library.meam U U.meam U
 
-pair_style meam 
-pair_coeff * * library.meam  SiS AlSiMgCuFe.meam SiS 
+#pair_style meam 
+#pair_coeff * * library.meam  SiS AlSiMgCuFe.meam SiS 
+
+pair_style eam/alloy
+pair_coeff * * Zhou_Al.setfl Al 
+
 
 
 #pair_style  	meam/spline
