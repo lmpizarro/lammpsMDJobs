@@ -4,7 +4,7 @@
 
 # Define the finite deformation size. Try several values of this
 # variable to verify that results do not depend on it.
-variable up equal 1.0e-6
+variable up equal 0.5e-6
  
 # Define the amount of random jiggle for atoms
 # This prevents atoms from staying on saddle points
@@ -29,10 +29,10 @@ variable cunits string GPa
 #variable cunits string GPa
 
 # Define minimization parameters
-variable etol equal 0.0 
-variable ftol equal 1.0e-10
-variable maxiter equal 100
-variable maxeval equal 1000
+variable etol equal 1.0e-15 
+variable ftol equal 1.0e-15
+variable maxiter equal 10000
+variable maxeval equal 10000
 variable dmax equal 1.0e-2
 
 # generate the box and atom positions using a diamond lattice

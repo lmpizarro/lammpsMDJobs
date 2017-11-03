@@ -64,6 +64,11 @@ exp_props ={'Fe': {'a': 2.87, 'Ec': 4.28, 'C11':2.26,
                    'C12':1.761 , 'C44':0.717, 'Evf':1.4 },
             'Pt':{'a':3.92, 'Ec':5.84 , 'C11':3.470, 
                    'C12':2.51 , 'C44':0.765, 'Evf':1.5 },
+            'Al':{'a':4.05, 'Sh':26, 'B':76, 'Pr':0.35, 'E':70}, 
+            # E:young modulus B: bulk modulus 
+            # Sh: rigidity modulus (shear modulus)
+            # Pr: Poisson ratio
+            'Si':{'a':5.4309, 'Sh':'no-data', 'B':100, 'Pr':'no-data', 'E':47},
                    }
 
 
