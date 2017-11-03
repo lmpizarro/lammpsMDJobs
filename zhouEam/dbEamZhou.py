@@ -1,8 +1,13 @@
+import periodictable as pt
 '''
-re: r_e, fe: f_e, rhoe: rho_e_, alfa: gamma_****, beta:omega_****,
-A: A_, B:B_, kappa: kappa_, lambda: lambda, Fn0: F_n0_, Fn1:F_n1_,
-Fn2: F_n2_, Fn3:F_n3_, F0:F_0_, F1:F_1_, F2:F_2_, F3:F_3_, eta:eta_
-Fo:F_e
+re: r_e,   fe: f_e,    rhoe: rho_e_,  alfa: gamma_****, beta:omega_****,
+A: A_,     B:B_,       kappa: kappa_, lambda: lambda_,   Fn0: F_n0_, 
+Fn1:F_n1_, Fn2: F_n2_, Fn3:F_n3_,     F0:F_0_,          F1:F_1_, 
+F2:F_2_,   F3:F_3_,    eta:eta_,      Fo:F_e
+
+P(r): A, B, gamma_ (alfa), omega_ (beta), r_e, lambda, kappa_
+f(r): f_e, omega_, r_e, lambda
+F(f): rho_e, eta_, F_n0_,  F_n1_, F_n2_, F_n3_, F_0_, F_1_, F_2_, F_3_, Fo 
 
 Atomic scale structure of sputtered metal multilayers
 Acta Mater. 49 (2001) 4005-4015
@@ -72,12 +77,6 @@ exp_props ={'Fe': {'a': 2.87, 'Ec': 4.28, 'Evf':1.79,
             'Al':{'a':4.05, 'Ec':3.34, 'Sh':26, 'B':76, 'Pr':0.35, 'E':70,
                 'cijcalc':{'fcc':{'C11':101.0,'C12':61,'C44':25.4}},
                 'cijexp':{'C11':114.0,'C12':61.9,'C44':31.6}}, 
-
-            'Si':{'a':5.430099,'Ec':4.64, 'Sh':'no-data', 'B':100, 
-                'Pr':'no-data', 'E':47, 
-                'cijcalc':{'fcc':{'C11':64.4,'C12':87.2,'C44':4.7}},
-                'cijexp':{'C11':166.0,'C12':63.9,'C44':79.6}
-                    },
             'Mg':{'Ec':1.53,
                 'cijexp':{'C11':59.3,'C33':61.5, 'C44':16.4, 'C12':25.7,
                     'C13':21.4}
@@ -94,7 +93,23 @@ exp_props ={'Fe': {'a': 2.87, 'Ec': 4.28, 'Evf':1.79,
             'Pb':{'Ec':2.04,
                 'cijexp':{'C11':55.5,'C12':45.4,'C44':19.4}
                 },
-            'Cr':{'Ec':4.1}
+            'Cr':{'Ec':4.1,
+                'cijexp':{'C11':391,'C12':90.0,'C44':103.2}
+                    },
+            'Y':{'Ec':4.387,
+                'cijexp':{'C11':77.9,'C33':76.9, 'C44':24.3, 'C12':29.2,
+                    'C13':20}
+                    },
+            'Si':{'a':5.430099,'Ec':4.64, 'Sh':'no-data', 'B':100, 
+                'Pr':'no-data', 'E':47, 
+                'cijcalc':{'fcc':{'C11':64.4,'C12':87.2,'C44':4.7}},
+                'cijexp':{'C11':166.0,'C12':63.9,'C44':79.6}
+                    },
+            'U':{'Ec':5.405,
+
+                    'cijexp':{'C11':13.6, 'C44':165.6, 'C12':20.2},
+                    'cijcalc':{'fcc':{'C11':13.6, 'C44':165.6, 'C12':20.2}}
+                }
             }
 
 
@@ -268,11 +283,67 @@ def test2():
 
     ez.printAll()
 
+def latticeA(el):
+    form = pt.formula(el)
+    e_ = form.structure[0][1]
+    crys = e_.crystal_structure['symmetry'] 
+    a_ = e_.crystal_structure['a'] 
+
+    return  a_
+
+def miningEpsSig(element):
+    cijsi = exp_props[element]
+
+    a0 = latticeA(element)
+    Ec0 = cijsi['Ec']
+
+    E=''
+    S=1e6
+    for e in parameters:
+        sum_ = 0
+        Ac = ((a0 - latticeA(e)) / a0) **2
+        Ec = ((exp_props[e]['Ec'] - Ec0) / Ec0) ** 2
+        sum_ += Ec + Ac
+        if sum_ < S:
+            S = sum_
+            E = e
+    return E
+
+
+def miningCij(element, cijs=[ 'C11','C12','C44']):
+    cijsi = exp_props[element]
+
+    keys = cijs 
+
+    E=''
+    S=1e6
+    for e in parameters:
+        sum_ = 0
+        for k in keys:
+            sum_ += ((exp_props[e]['cijexp'][k] - cijsi['cijexp'][k]) / \
+                    cijsi['cijexp'][k])**2
+        if sum_ < S:
+            S = sum_
+            E = e
+    return   E
+
 def test3():
-    cijsi = exp_props['Si']['cijcalc']
-    print cijsi['fcc']
-    for e in exp_props:
-        print e, exp_props[e]['Ec']
+    element = 'Si'
+    ec = miningCij(element)
+    ees = miningEpsSig(element)
+
+    print element, ' elastic :', ec, 'sigma epsilon: ', ees
+
+
+def test4():
+    from periodictable import formula
+    elsInOrder =['Mg', 'Al', 'Ti', 'Cr', 'Fe','Ni', 'Co', 
+                 'Cu', 'Zr', 'Nb', 'Mo', 'Pd', 'Ag', 'Ta', 
+                 'W', 'Pt', 'Au', 'Pb']
+    print len(elsInOrder)
+    for e in elsInOrder:
+        print e, formula(e).mass, parameters[e]['A_'], parameters[e]['r_e']
 
 if __name__ == '__main__':
     test3()
+    test4()

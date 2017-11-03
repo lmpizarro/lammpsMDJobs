@@ -162,7 +162,7 @@ class calcPotentials():
         return self.fileName
 
 
-if __name__ == '__main__':
+def test02():
     ES = ['Zr', 'Nb','Cr', 'Ti']
 
     c = calcPotentials(ES)
@@ -171,3 +171,53 @@ if __name__ == '__main__':
 
     print c.getEam()
 
+def test01():
+    import matplotlib.pyplot as plt
+    ES = ['Ti']
+    p = dbZhou.parameters[ES[0]]
+
+    A = p['A_'] 
+    gamma=p['gamma_']
+    r_e = p['r_e']
+    kappa = p['kappa_']
+    B = p['B_']
+    omega  = p['omega_']
+    lamda = p['lambda_']
+    c = calcPotentials(ES)
+    f = c.makePairPotAA(A, gamma, r_e, kappa, B, omega, lamda)
+    import numpy as np
+    rr = np.linspace(0, 5, 50)
+    ff = []
+    for r in rr: 
+        ff.append (f(r))
+
+    plt.plot(rr, ff)
+    plt.show()
+
+    E1 = p
+    dd = []
+    dens = c.makeFunc(E1['f_e'], E1['omega_'], E1['r_e'], E1['lambda_'])
+
+    for r in rr: 
+        dd.append (dens(r))
+
+    plt.plot(rr, dd)
+    plt.show()
+
+
+    ee = []
+    F_ni_E1 = [E1['F_n0_'], E1['F_n1_'], E1['F_n2_'], E1['F_n3_']]
+    F_i_E1 = [E1['F_0_'], E1['F_1_'], E1['F_2_'], E1['F_3_']]
+    embed = c.makeEmbed(E1['rho_e_'], E1['rho_s_'], F_ni_E1, F_i_E1, \
+                E1['F_e_'], E1['eta_'])
+
+    rr = np.linspace(0, 400, 50)
+    for r in rr: 
+        ee.append (embed(r))
+
+    plt.plot(rr, ee)
+    plt.show()
+
+
+if __name__ == '__main__':
+    test01()
