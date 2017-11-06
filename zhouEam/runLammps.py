@@ -9,7 +9,7 @@ import system
 import numpy as np
 from ase.units import GPa
 
-
+import dataLammps as dLmps
 
 class RLammps():
     def __init__(self, system, label='lammps'):
@@ -156,9 +156,6 @@ class RLammps():
         with open(self.in_lmp, 'w') as inscript:
              inscript.write( in_lammps )
 
-    def setDataLmp(self, name):
-        self.data_lmps = name
-
     def setInteraction (self, interaction):
         self.interaction = interaction
 
@@ -166,68 +163,38 @@ class RLammps():
         self.fix = fix
 
     def run(self):
+        dL = dLmps.DataLammps(self.system)
+        dL.genFile()
+        self.create_in()
+
+
         import atomman.lammps as lmp
         output = lmp.run(self.lammps_exe, self.in_lmp, return_style='object')
 
 
-class DataLammps():
-    def __init__(self, sys):
-
-        self.sys = sys
-        self.settings = sys.setting
-
-        self.data_lmp = self.settings['lammps_setting']['data_lmp']
-
-        elements = self.settings['elements']
-        self.nTypes = len(elements) 
-      
-        self.nAt = self.settings['nAtoms']
-
-        self.pos = None
-        self.t1_ = None
-
-
-    def genFile(self):
-        self.str_ = '\n'
-        self.str_ += str(self.nAt) + ' atoms\n'
-        self.str_ += str(self.nTypes) + ' atom types\n'
-        xlo = self.sys.box[0][0]
-        xhi = self.sys.box[0][1]
-        ylo = self.sys.box[1][0]
-        yhi = self.sys.box[1][1]
-        zlo = self.sys.box[2][0]
-        zhi = self.sys.box[2][1]
-        self.str_ += str(float(xlo)) + ' ' +str(xhi)+ '  ' + ' xlo xhi\n'
-        self.str_ += str(float(ylo)) + ' ' +str(yhi)+ '  ' + ' ylo yhi\n'
-        self.str_ += str(float(zlo)) + ' ' +str(zhi)+ '  ' + ' zlo zhi\n'
-        self.str_ +='\n'
-        self.str_ +='Atoms\n'
-        self.str_ +='\n'
-
-        for i,e in enumerate(self.sys.pos):
-            self.str_ += str(i +1) + '  ' +   str(self.sys.t1_[i]) + ' ' +\
-                    str(e[0]) + ' ' + str(e[1])+ ' '  + str(e[2]) + '\n'
-        with open(self.data_lmp, 'w') as inscript:
-            inscript.write( self.str_)
-
-        print 'Generated: ', self.data_lmp
-
 def test_04():
-    data_lmp = 'data.lmp'
-    in_lmp = 'in.min'
+
+    lammps_setting = {'data_lmp':'data.lmp', 
+                      'in_lmp':'in.min',
+                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
 
     setting ={'elements':['Al'], 'pot':'zhou', \
               'pca':[], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
-              'structure':'fcc',\
-              'positions':'rnd','a':4.2, 'period':[5,5,5]}
+              'structure':'rnd',\
+              'positions':'rnd','a':4.2, 'period':[5,5,5],\
+              'lammps_setting':lammps_setting }
 
     sys = system.System(setting)
-
     calc = RLammps(sys)
+    calc.run()
 
+    (Lx, Ly, Lz, PotEng, Atoms) = calc.get_vals()
+
+
+    print Lx, Ly, Lz, PotEng, Atoms
 
 def test_01():
 
@@ -246,11 +213,6 @@ def test_01():
 
     sys = system.System(setting)
     rL = RLammps(sys)
-    rL.create_in()
-
-    dL = DataLammps(sys)
-    dL.genFile()
-
     rL.run()
 
 
@@ -277,15 +239,10 @@ def test_02():
               #'positions':'rnd','a':4.2, 'period':[4,4,4]}
 
     sys = system.System(setting)
-
     rL = RLammps(sys)
-
-    rL.create_in()
-
-    dL = DataLammps(sys)
-    dL.genFile()
-
     rL.run()
+
+
 
     (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
     print Lx, PotEng, Atoms
@@ -328,13 +285,7 @@ def test_03():
               'lammps_setting':lammps_setting}
 
         sys = system.System(setting)
-
         rL = RLammps(sys)
-        rL.create_in()
-
-        dL = DataLammps(sys)
-        dL.genFile()
-
         rL.run()
 
         (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
@@ -345,4 +296,7 @@ def test_03():
 
 
 if __name__ == '__main__':
-    test_03()
+    #test_04()
+    #test_03()
+    test_02()
+    #test_01()

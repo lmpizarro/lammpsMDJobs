@@ -99,12 +99,12 @@ class System():
         return self.pos, self.t1_, self.box
 
     def genRandomPositions(self):
-        Lx = self.sys.box[0][1]
-        Ly = self.sys.box[1][1]
-        Lz = self.sys.box[2][1]
+        Lx = self.box[0][1]
+        Ly = self.box[1][1]
+        Lz = self.box[2][1]
 
         self.pos =[]
-        for i in range(self.nAt):
+        for i in range(self.setting['nAtoms']):
             x = random.random() * Lx
             y = random.random() * Ly
             z = random.random() * Lz
