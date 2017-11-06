@@ -61,6 +61,8 @@ class RLammps():
         self.fix = self.formatMultiline(self.fix_min)
         self.interaction = self.formatMultiline(self.defInteraction)
 
+    def update(self):
+        self.atoms = self.system.getAtoms()
 
     def get_vals(self):
 
@@ -157,6 +159,8 @@ class RLammps():
         self.fix = fix
 
     def run(self):
+        self.update()
+        self.system.update()
         dL = dLmps.DataLammps(self.system)
         dL.genFile()
         self.create_in()
@@ -186,14 +190,42 @@ def test_01():
     sys = system.System(setting)
     rL = RLammps(sys)
     rL.run()
-
-
     (Lx, Ly, Lz, PotEng, atoms) = rL.get_vals()
 
     stress =  rL.get_stress()
     print rL.get_potential_energy()
     print Lx, Ly, Lz, PotEng, atoms
 
+    ##############################################
+
+    cell  = sys.bulk.get_cell()
+    vol0 = sys.bulk.get_volume()
+
+    sxx0, syy0, szz0, syz0, szx0, sxy0  = rL.get_stress()
+
+    ## C11
+    eps = 0.00001
+    T = np.diag( [ eps, 0.0, 0.0 ] )
+    sys.bulk.set_cell( np.dot(np.eye(3)+T, cell.T).T, scale_atoms=True )
+
+    rL.run()
+    (Lx, Ly, Lz, PotEng, atoms) = rL.get_vals()
+    print Lx, Ly, Lz, PotEng, atoms
+
+
+    sxx11, syy11, szz11, syz11, szx11, sxy11  = rL.get_stress()
+    from ase.units import GPa
+
+
+    C11  = (sxx11-sxx0)/eps
+
+    print C11 / GPa
+
+    vol2 =  sys.bulk.get_volume()
+
+    print vol2 -vol0
+
+    ##############################################
 
 def test_02():
 

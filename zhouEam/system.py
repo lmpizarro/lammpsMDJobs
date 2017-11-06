@@ -82,6 +82,11 @@ class System():
         self.nAt = self.setting['nAtoms']
         self.bulk = alloy
 
+    def update (self):
+        cell  = self.bulk.get_cell()
+        self.box =[[0, cell[0][0]],[0, cell[1][1]],[0, cell[2][2]]]
+        self.pos = self.bulk.get_positions()
+
     def genStructure(self):
         self.t1_ = []
         for i,e in enumerate(self.setting['nAt']):
