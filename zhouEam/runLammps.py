@@ -5,15 +5,13 @@ from log import log
 from ase.calculators.calculator import PropertyNotImplementedError
 
 import system
-import random
 
 import numpy as np
 from ase.units import GPa
 
 
-lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
 
-class RunLammps():
+class RLammps():
     def __init__(self, system, label='lammps'):
         self.label = label
 
@@ -22,6 +20,11 @@ class RunLammps():
         'Pxz', 'Pyz', 'KinEng', 'PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
 
         self.atoms = system.getAtoms()
+
+        self.data_lmps = self.system.setting['lammps_setting']['data_lmp']
+        self.in_lmp =  self.system.setting['lammps_setting']['in_lmp']
+        self.lammps_exe = self.system.setting['lammps_setting']['lammps_exe']
+
 
         self.log = 'log.lammps'
 
@@ -146,14 +149,11 @@ class RunLammps():
            str_ +=e.lstrip() + '\n'
         return str_
 
-    def create_in(self, fileName):
+    def create_in(self):
         mass = self.system.getMasess()
-
-        self.in_lmp = fileName
-
         in_lammps = self.in_frame % (self.data_lmps, self.interaction, mass, self.fix)
 
-        with open(fileName, 'w') as inscript:
+        with open(self.in_lmp, 'w') as inscript:
              inscript.write( in_lammps )
 
     def setDataLmp(self, name):
@@ -167,7 +167,7 @@ class RunLammps():
 
     def run(self):
         import atomman.lammps as lmp
-        output = lmp.run(lammps_exe, self.in_lmp, return_style='object')
+        output = lmp.run(self.lammps_exe, self.in_lmp, return_style='object')
 
 
 class DataLammps():
@@ -175,6 +175,8 @@ class DataLammps():
 
         self.sys = sys
         self.settings = sys.setting
+
+        self.data_lmp = self.settings['lammps_setting']['data_lmp']
 
         elements = self.settings['elements']
         self.nTypes = len(elements) 
@@ -184,44 +186,17 @@ class DataLammps():
         self.pos = None
         self.t1_ = None
 
-        per = self.settings['period']
-        a = self.settings['a']
-        self.box =[[0, per[0]*a],[0, per[1]*a],[0, per[2]*a]]
 
-        if self.settings['structure'] == 'rnd':
-            print 'rnd implemented'
-            self.genRandomPositions()
-
-            self.genStructure()
- 
-            self.setRandomStructure()
-        if self.settings['structure'] == 'fcc':
-            self.setCrystal('fcc')
-            print 'fcc implemented'
-
-            if self.settings['positions'] == 'rnd':
-                self.setRandomStructure()
-        if self.settings['structure'] == 'bcc':
-            self.setCrystal('bcc')
-
-            if self.settings['positions'] == 'rnd':
-                self.setRandomStructure()
-            print 'bcc no implemented'
-            #sys.exit(0)
-        if self.settings['structure'] == 'hcp':
-            print 'hcp no implemented'
-            sys.exit(0)
-
-    def genFile(self, fileName):
+    def genFile(self):
         self.str_ = '\n'
         self.str_ += str(self.nAt) + ' atoms\n'
         self.str_ += str(self.nTypes) + ' atom types\n'
-        xlo = self.box[0][0]
-        xhi = self.box[0][1]
-        ylo = self.box[1][0]
-        yhi = self.box[1][1]
-        zlo = self.box[2][0]
-        zhi = self.box[2][1]
+        xlo = self.sys.box[0][0]
+        xhi = self.sys.box[0][1]
+        ylo = self.sys.box[1][0]
+        yhi = self.sys.box[1][1]
+        zlo = self.sys.box[2][0]
+        zhi = self.sys.box[2][1]
         self.str_ += str(float(xlo)) + ' ' +str(xhi)+ '  ' + ' xlo xhi\n'
         self.str_ += str(float(ylo)) + ' ' +str(yhi)+ '  ' + ' ylo yhi\n'
         self.str_ += str(float(zlo)) + ' ' +str(zhi)+ '  ' + ' zlo zhi\n'
@@ -229,74 +204,15 @@ class DataLammps():
         self.str_ +='Atoms\n'
         self.str_ +='\n'
 
-        for i,e in enumerate(self.pos):
-            self.str_ += str(i +1) + '  ' +   str(self.t1_[i]) + ' ' +\
+        for i,e in enumerate(self.sys.pos):
+            self.str_ += str(i +1) + '  ' +   str(self.sys.t1_[i]) + ' ' +\
                     str(e[0]) + ' ' + str(e[1])+ ' '  + str(e[2]) + '\n'
-        with open(fileName, 'w') as inscript:
+        with open(self.data_lmp, 'w') as inscript:
             inscript.write( self.str_)
 
-        print 'Generated: ', fileName
+        print 'Generated: ', self.data_lmp
 
-
-    def genStructure(self):
-        self.t1_ = []
-        for i,e in enumerate(self.settings['nAt']):
-            [self.t1_.append(i+1) for j in range(e)]
- 
-    def setRandomStructure(self):
-        x = [int(random.random()*len(self.t1_)) for i in range(len(self.t1_))]
-
-        for i in range(len(x) - 1):
-            t1 = self.t1_[x[i]]
-            t2 = self.t1_[x[i+1]]
-
-            self.t1_[x[i]] = t2
-            self.t1_[x[i+1]] = t1
-            
-        return self.pos, self.t1_, self.box
-
-    def genRandomPositions(self):
-        Lx = self.box[0][1]
-        Ly = self.box[1][1]
-        Lz = self.box[2][1]
-
-        self.pos =[]
-        for i in range(self.nAt):
-            x = random.random() * Lx
-            y = random.random() * Ly
-            z = random.random() * Lz
-            self.pos.append([x,y,z])
-
-    def setCrystal(self, crys):
-        px = self.settings['period'][0]
-        py = self.settings['period'][1]
-        pz = self.settings['period'][2]
-        a =  self.settings['a']
-
-        if crys == 'fcc':
-            from ase.lattice.cubic import FaceCenteredCubic
-            alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
-                                        size=(px,py,pz), symbol='Cu',
-                    pbc=(1,1,1), latticeconstant=a)
-
-        if crys == 'bcc':
-            from ase.lattice.cubic import BodyCenteredCubic
-            alloy = BodyCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
-                                        size=(px,py,pz), symbol='Cu',
-                    pbc=(1,1,1), latticeconstant=a)
-
-        self.settings['nAtoms'] =  alloy.get_number_of_atoms()
-
-        self.sys.calcAtoms2()
-
-        self.genStructure()
-
-        self.pos = alloy.get_positions()
-        self.nAt = self.settings['nAtoms']
-
-
-def test_01():
-
+def test_04():
     data_lmp = 'data.lmp'
     in_lmp = 'in.min'
 
@@ -310,12 +226,30 @@ def test_01():
 
     sys = system.System(setting)
 
-    rL = RunLammps(sys)
-    rL.setDataLmp(data_lmp)
-    rL.create_in(in_lmp)
+    calc = RLammps(sys)
+
+
+def test_01():
+
+    lammps_setting = {'data_lmp':'data.lmp', 
+                      'in_lmp':'in.min',
+                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
+
+    setting ={'elements':['Al'], 'pot':'zhou', \
+              'pca':[], 'nAtoms':250,\
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
+              'structure':'fcc',\
+              'positions':'rnd','a':4.2, 'period':[5,5,5],\
+              'lammps_setting':lammps_setting }
+
+    sys = system.System(setting)
+    rL = RLammps(sys)
+    rL.create_in()
 
     dL = DataLammps(sys)
-    dL.genFile(data_lmp)
+    dL.genFile()
 
     rL.run()
 
@@ -330,39 +264,39 @@ def test_01():
 
 def test_02():
 
-    data_lmp = 'data.lmp'
-    in_lmp = 'in.min'
+    lammps_setting = {'data_lmp':'data.lmp', 'in_lmp':'in.min' ,
+                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
 
     setting ={'elements':['Zr', 'Fe', 'Al'], 'pot':'zhou', \
               'pca':[10, 10], 'nAtoms':250,\
               'structure':'bcc',\
-              'positions':'rnd','a':3.0, 'period':[5,5,5]}
+              'positions':'rnd','a':3.0, 'period':[5,5,5], \
+              'lammps_setting':lammps_setting}
 
               #'structure':'fcc',\
               #'positions':'rnd','a':4.2, 'period':[4,4,4]}
 
     sys = system.System(setting)
 
-    rL = RunLammps(sys)
+    rL = RLammps(sys)
 
-    rL.setDataLmp(data_lmp)
-    rL.create_in(in_lmp)
+    rL.create_in()
 
     dL = DataLammps(sys)
-    dL.genFile(data_lmp)
+    dL.genFile()
 
     rL.run()
 
-    (Lx, PotEng, Atoms) = rL.get_vals()
+    (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
     print Lx, PotEng, Atoms
 
 def test_03():
+
+    lammps_setting = {'data_lmp':'data.lmp', 'in_lmp':'in.min' ,
+                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
+
+
     import dbEamZhou as dbz
-
-    data_lmp = 'data.lmp'
-    in_lmp = 'in.min'
-
-
     parameters = dbz.parameters
 
     fccs = []
@@ -382,21 +316,24 @@ def test_03():
     import periodictable as pt
     str_ = ''
     for e in fccs:
+
         form = pt.formula(e)
         a = form.structure[0][1].crystal_structure['a']
+
+
         setting ={'elements':[e], 'pot':'zhou', \
               'pca':[], 'nAtoms':250,\
               'structure':parameters[e]['struct'],\
-              'positions':'rnd','a':4.2, 'period':[5,5,5]}
+              'positions':'rnd','a':4.2, 'period':[5,5,5], \
+              'lammps_setting':lammps_setting}
 
         sys = system.System(setting)
 
-        rL = RunLammps(sys)
-        rL.setDataLmp(data_lmp)
-        rL.create_in(in_lmp)
+        rL = RLammps(sys)
+        rL.create_in()
 
         dL = DataLammps(sys)
-        dL.genFile(data_lmp)
+        dL.genFile()
 
         rL.run()
 
@@ -407,6 +344,5 @@ def test_03():
     print str_
 
 
-
 if __name__ == '__main__':
-    test_01()
+    test_03()
