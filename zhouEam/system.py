@@ -80,6 +80,7 @@ class System():
 
         self.pos = alloy.get_positions()
         self.nAt = self.setting['nAtoms']
+        self.bulk = alloy
 
     def genStructure(self):
         self.t1_ = []
@@ -134,7 +135,7 @@ class System():
         len_elements = len(self.setting['elements'])
         len_pca = len(self.setting['pca'])
 
-        print len_pca, len_elements
+        print 'calcAtom2', len_pca, len_elements
 
         if len_elements != len_pca + 1:
             print 'error len'
@@ -157,10 +158,13 @@ class System():
             nAt.append(t)
 
         nAt.append(self.setting['nAtoms'] - sum_)
-        self.setting['nAt'] = nAt
 
-        #print 'pca', self.setting['pca']
-        #print 'nAt', self.setting['nAt']
+        self.setting['nAtoms'] = 0
+        for e in nAt: 
+            self.setting['nAtoms'] +=e
+
+        print 'pca', self.setting['pca']
+        self.setting['nAt'] =  nAt 
 
 
     def getMasess(self):

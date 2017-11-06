@@ -62,15 +62,9 @@ class RLammps():
         self.interaction = self.formatMultiline(self.defInteraction)
 
 
-
     def get_vals(self):
-        lg = log(self.log)
-        status = {}
 
-        for k in self.keys_thermo:
-            a =  lg.get(k)
-            i = len(a) - 1 
-            status[k] = a[i]
+        status = self.run_results 
 
         nx = self.system.setting['period'][0]
         ny = self.system.setting['period'][1]
@@ -171,30 +165,8 @@ class RLammps():
         import atomman.lammps as lmp
         output = lmp.run(self.lammps_exe, self.in_lmp, return_style='object')
 
+        self.parse_log()
 
-def test_04():
-
-    lammps_setting = {'data_lmp':'data.lmp', 
-                      'in_lmp':'in.min',
-                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
-
-    setting ={'elements':['Al'], 'pot':'zhou', \
-              'pca':[], 'nAtoms':250,\
-              #'structure':'bcc',\
-              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
-
-              'structure':'rnd',\
-              'positions':'rnd','a':4.2, 'period':[5,5,5],\
-              'lammps_setting':lammps_setting }
-
-    sys = system.System(setting)
-    calc = RLammps(sys)
-    calc.run()
-
-    (Lx, Ly, Lz, PotEng, Atoms) = calc.get_vals()
-
-
-    print Lx, Ly, Lz, PotEng, Atoms
 
 def test_01():
 
@@ -216,12 +188,11 @@ def test_01():
     rL.run()
 
 
-    (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
+    (Lx, Ly, Lz, PotEng, atoms) = rL.get_vals()
 
-    rL.parse_log()
-    print rL.get_stress()
+    stress =  rL.get_stress()
     print rL.get_potential_energy()
-    print Lx, Ly, Lz, PotEng, Atoms
+    print Lx, Ly, Lz, PotEng, atoms
 
 
 def test_02():
@@ -241,8 +212,6 @@ def test_02():
     sys = system.System(setting)
     rL = RLammps(sys)
     rL.run()
-
-
 
     (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
     print Lx, PotEng, Atoms
@@ -294,9 +263,34 @@ def test_03():
 
     print str_
 
+def test_04():
+
+    lammps_setting = {'data_lmp':'data.lmp', 
+                      'in_lmp':'in.min',
+                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
+
+    setting ={'elements':['Al'], 'pot':'zhou', \
+              'pca':[], 'nAtoms':250,\
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
+              'structure':'rnd',\
+              'positions':'rnd','a':4.2, 'period':[5,5,5],\
+              'lammps_setting':lammps_setting }
+
+    sys = system.System(setting)
+    calc = RLammps(sys)
+    calc.run()
+
+    (Lx, Ly, Lz, PotEng, Atoms) = calc.get_vals()
+
+
+    print Lx, Ly, Lz, PotEng, Atoms
+
+
 
 if __name__ == '__main__':
     #test_04()
     #test_03()
-    test_02()
-    #test_01()
+    #test_02()
+    test_01()
