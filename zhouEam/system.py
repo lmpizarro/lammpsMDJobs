@@ -126,7 +126,6 @@ class System():
             str_ = ljp.lammpsInteraction(self.atoms)
         if self.setting['pot'] == 'zhou':
             gz = zhou.calcPotentials(self.setting['elements'])
-            print "TODO: not yet implemented"
             gz.createPot()
             str_ = gz.getEam()
 
