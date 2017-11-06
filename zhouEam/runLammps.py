@@ -2,15 +2,24 @@ import sys
 sys.path.append('../../pizza/src')
 from log import log
 
+from ase.calculators.calculator import PropertyNotImplementedError
+
 import system
 import random
+
+import numpy as np
+from ase.units import GPa
+
 
 lammps_exe ='/opt/lmpizarro/GitHub/lammps/src/lmp_serial'
 
 class RunLammps():
-    def __init__(self, system):
+    def __init__(self, system, label='lammps'):
+        self.label = label
+
         self.system = system
-        self.keys_thermo = ['Step', 'Press','PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
+        self.keys_thermo = ['Step', 'Press','CPU', 'Pxx', 'Pyy', 'Pzz', 'Pxy',
+        'Pxz', 'Pyz', 'KinEng', 'PotEng','TotEng', 'Lx', 'Ly','Lz','Atoms'] 
 
         self.atoms = system.getAtoms()
 
@@ -33,7 +42,7 @@ class RunLammps():
             # 3 mass 1 1.0e-20
             %s
             
-            thermo_style custom step press pe etotal  lx ly lz atoms 
+            thermo_style custom step press cpu pxx pyy pzz pxy pxz pyz ke pe etotal  vol lx ly lz atoms 
             # 4 fix
             %s
 
@@ -70,7 +79,65 @@ class RunLammps():
         PotEng = status['PotEng']
         Atoms = status['Atoms']
 
+
+        Pxx = status['Pxx']
+        Pyy = status['Pyy']
+        Pzz = status['Pzz']
+        Pxy = status['Pxy']
+        Pyz = status['Pyz']
+        Pxz = status['Pxz']
+
+
         return (Lx, Ly, Lz, PotEng / Atoms, Atoms)
+
+
+    def parse_log(self):
+        lg = log(self.log)
+        status = {}
+
+        for k in self.keys_thermo:
+            a =  lg.get(k)
+            i = len(a) - 1 
+            status[k] = a[i]
+
+        Step = status['Step']
+        Press = status['Press']
+        CPU = status['CPU']
+
+        Pxx = status['Pxx']
+        Pyy = status['Pyy']
+        Pzz = status['Pzz']
+        Pxy = status['Pxy']
+        Pyz = status['Pyz']
+        Pxz = status['Pxz']
+
+        KinEng = status['KinEng']
+        PotEng = status['PotEng']
+        TotEng = status['TotEng']
+        Atoms = status['Atoms']
+
+
+        Lx = status['Lx']
+        Ly = status['Ly']
+        Lz = status['Lz']
+
+        self.run_results = {'Step':Step, 'Press':Press,'CPU':CPU, 
+                'Pxx':Pxx, 'Pyy':Pyy, 'Pzz':Pzz, 'Pxy':Pxy, 'Pxz':Pxz, 'Pyz':Pyz, 
+                'KinEng':KinEng, 'PotEng':PotEng,'TotEng':TotEng, 
+                'Lx':Lx, 'Ly':Ly,'Lz':Lz,'Atoms':Atoms} 
+
+
+    def get_forces(self):
+        # TODO
+        raise PropertyNotImplementedError
+
+    def get_stress(self):
+        pss = ['Pxx', 'Pyy', 'Pzz','Pyz',  'Pxz', 'Pxy' ]
+        # TODO
+        return np.array([self.run_results[i] for i in pss])*(-1e-4*GPa)
+
+    def get_potential_energy(self):
+        return self.run_results['PotEng']
 
     def formatMultiline(self, multiline):
         l = multiline.split('\n')
@@ -252,7 +319,12 @@ def test_01():
 
     rL.run()
 
+
     (Lx, Ly, Lz, PotEng, Atoms) = rL.get_vals()
+
+    rL.parse_log()
+    print rL.get_stress()
+    print rL.get_potential_energy()
     print Lx, Ly, Lz, PotEng, Atoms
 
 
@@ -335,5 +407,6 @@ def test_03():
     print str_
 
 
+
 if __name__ == '__main__':
-    test_03()
+    test_01()
