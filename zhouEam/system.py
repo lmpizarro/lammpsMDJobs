@@ -24,7 +24,7 @@ class System():
 
         self.setElsProps()
 
-        self.setCrystal(self.setting['structure'])
+        self.setCrystal()
 
         if self.setting['positions'] == 'rnd':
                 self.setRandomStructure()
@@ -51,8 +51,8 @@ class System():
             self.elsProps.append({'ase':a, 'mass': mass, 'structure': crys,
                 'a':a_ , 'number':number})
 
-    def setCrystal(self, crys):
-
+    def setCrystal(self):
+        crys = self.setting['structure']
         if crys == 'rnd':
             print 'rnd implemented'
             self.genRandomPositions()
@@ -183,6 +183,7 @@ class System():
             i+=1
         return  str_
 
+from ase.visualize import view
 def test_01():
 
     lammps_setting = {'data_lmp':'data.lmp', 
@@ -209,6 +210,8 @@ def test_01():
 
     print sys.Interaction()
 
+    view (sys.bulk)
+
 def test_02():
 
     lammps_setting = {'data_lmp':'data.lmp', 
@@ -233,6 +236,7 @@ def test_02():
     print 'bulk', sys.bulk
 
     print sys.Interaction()
+    view (sys.bulk)
 
 def test_03():
 
@@ -240,8 +244,8 @@ def test_03():
                       'in_lmp':'in.min',
                        'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
 
-    setting ={'elements':['Al'], 'pot':'zhou', \
-              'pca':[], 'nAtoms':250,\
+    setting ={'elements':['Al', 'Fe'], 'pot':'zhou', \
+              'pca':[20], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
@@ -256,6 +260,8 @@ def test_03():
     print sys.setting['pca']
     print 'atoms', sys.elsProps
     print 'bulk', sys.bulk
+
+    view(sys.bulk)
 
     print sys.Interaction()
 
