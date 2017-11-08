@@ -150,7 +150,7 @@ def test_01():
     atoms = sys1.bulk 
     atoms.set_calculator(calc)
 
-    #print (atoms.get_stress())
+    print (atoms.get_stress())
     epa0 = atoms.get_potential_energy() / atoms.get_number_of_atoms()
 
     init_cell = np.eye(3) * calc.run_results['Lx']

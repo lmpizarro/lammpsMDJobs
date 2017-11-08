@@ -2,7 +2,7 @@ import ase
 from ase.units import _Nav#, kB, kJ
 import periodictable as pt
 import ljParameters
-import EamZhouPotential as zhou
+import eamZhouPotential as zhou
 import sys
 import random
 
@@ -15,9 +15,15 @@ class System():
 
         self.calcAtoms2()
 
-        per = self.setting['period']
-        a = self.setting['a']
-        self.box =[[0, per[0]*a],[0, per[1]*a],[0, per[2]*a]]
+        self.px = self.setting['period'][0]
+        self.py = self.setting['period'][1]
+        self.pz = self.setting['period'][2]
+        self.a0 =  self.setting['a']
+
+
+        self.box =[[0, self.px*self.a0],\
+                [0,self.py*self.a0],\
+                [0,self.pz*self.a0]]
 
 
         for e in elements:
@@ -30,47 +36,39 @@ class System():
             a_ = e_.crystal_structure['a'] 
             self.atoms.append({'ase':a, 'mass': mass, 'structure': crys, 'a':a_ })
 
-        if self.setting['structure'] == 'rnd':
+        self.setCrystal(self.setting['structure'])
+
+        if self.setting['positions'] == 'rnd':
+                self.setRandomStructure()
+
+    def setCrystal(self, crys):
+
+        if crys == 'rnd':
             print 'rnd implemented'
             self.genRandomPositions()
+            d = 1.104  # N2 bondlength
+            formula =  'Cu'+str(len(self.pos))
+            cell =[(self.px*self.a0,0,0),(0,self.py*self.a0,0),(0,0,self.pz*self.a0)] 
+            alloy = ase.Atoms(formula, self.pos, pbc=True, cell=cell)
 
-            self.genStructure()
- 
-            self.setRandomStructure()
-        if self.setting['structure'] == 'fcc':
-            self.setCrystal('fcc')
+        if crys == 'fcc':
             print 'fcc implemented'
+            from ase.lattice.cubic import FaceCenteredCubic
+            alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+                                        size=(self.px,self.py,self.pz), symbol='Cu',
+                    pbc=(1,1,1), latticeconstant=self.a0)
 
-            if self.setting['positions'] == 'rnd':
-                self.setRandomStructure()
-        if self.setting['structure'] == 'bcc':
-            self.setCrystal('bcc')
+        if crys == 'bcc':
+            print 'bcc implemented'
+            from ase.lattice.cubic import BodyCenteredCubic
+            alloy = BodyCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+                                        size=(self.px,self.py,self.pz), symbol='Cu',
+                    pbc=(1,1,1), latticeconstant=self.a0)
 
-            if self.setting['positions'] == 'rnd':
-                self.setRandomStructure()
-            print 'bcc no implemented'
-            #sys.exit(0)
         if self.setting['structure'] == 'hcp':
             print 'hcp no implemented'
             sys.exit(0)
 
-    def setCrystal(self, crys):
-        px = self.setting['period'][0]
-        py = self.setting['period'][1]
-        pz = self.setting['period'][2]
-        a =  self.setting['a']
-
-        if crys == 'fcc':
-            from ase.lattice.cubic import FaceCenteredCubic
-            alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
-                                        size=(px,py,pz), symbol='Cu',
-                    pbc=(1,1,1), latticeconstant=a)
-
-        if crys == 'bcc':
-            from ase.lattice.cubic import BodyCenteredCubic
-            alloy = BodyCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
-                                        size=(px,py,pz), symbol='Cu',
-                    pbc=(1,1,1), latticeconstant=a)
 
         self.setting['nAtoms'] =  alloy.get_number_of_atoms()
 
@@ -91,6 +89,7 @@ class System():
         self.t1_ = []
         for i,e in enumerate(self.setting['nAt']):
             [self.t1_.append(i+1) for j in range(e)]
+
  
     def setRandomStructure(self):
         x = [int(random.random()*len(self.t1_)) for i in range(len(self.t1_))]
@@ -127,7 +126,7 @@ class System():
         if self.setting['pot'] == 'zhou':
             gz = zhou.calcPotentials(self.setting['elements'])
             gz.createPot()
-            str_ = gz.getEam()
+            str_ = gz.lammpsZhouEam()
 
         return str_
 
@@ -200,7 +199,8 @@ def test_01():
     print sys.setting['elements']
     print sys.setting['nAt']
     print sys.setting['pca']
-    print sys.atoms
+    print 'atoms', sys.atoms
+    print 'bulk', sys.bulk
 
     print sys.Interaction()
 
@@ -228,5 +228,30 @@ def test_02():
 
     print sys.Interaction()
 
+def test_03():
+
+    lammps_setting = {'data_lmp':'data.lmp', 
+                      'in_lmp':'in.min',
+                       'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
+
+    setting ={'elements':['Al'], 'pot':'zhou', \
+              'pca':[], 'nAtoms':250,\
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
+              'structure':'rnd',\
+              'positions':'rnd','a':4.2, 'period':[5,5,5],\
+              'lammps_setting':lammps_setting }
+
+    
+    sys = System(setting)
+    print sys.setting['elements']
+    print sys.setting['nAt']
+    print sys.setting['pca']
+    print 'atoms', sys.atoms
+    print 'bulk', sys.bulk
+
+    print sys.Interaction()
+
 if __name__ == '__main__':
-    test_01()
+    test_03()

@@ -149,7 +149,7 @@ class calcPotentials():
             out = outfile,
             comments = [self.comment, "", ""]) # <-- Note: title lines given as list of three strings
 
-    def getEam(self):
+    def lammpsZhouEam(self):
         str_ = 'pair_style eam/alloy\n'
         str_ += 'pair_coeff * * ' + self.fileName + ' '
 
@@ -169,7 +169,7 @@ def test02():
     print c
     c.createPot()
 
-    print c.getEam()
+    print c.lammpsZhouEam()
 
 def test01():
     import matplotlib.pyplot as plt
