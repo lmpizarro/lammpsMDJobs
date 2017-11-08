@@ -2,7 +2,7 @@ import sys
 
 sys.path.append('../zhouEam')
 import ljParameters
-import EamZhouPotential as zhou
+import eamZhouPotential as zhou
 import system as sys
 
 

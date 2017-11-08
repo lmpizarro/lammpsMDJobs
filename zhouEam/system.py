@@ -9,37 +9,47 @@ import random
 class System():
     def __init__(self, setting):
         self.setting = setting
-        self.atoms = []
 
-        elements = self.setting['elements']
-
-        self.calcAtoms2()
-
+        self.elsProps = []         # elements properties
+        self.setting['nAt'] = []   # number of atoms per specie
+        
         self.px = self.setting['period'][0]
         self.py = self.setting['period'][1]
         self.pz = self.setting['period'][2]
         self.a0 =  self.setting['a']
 
-
         self.box =[[0, self.px*self.a0],\
                 [0,self.py*self.a0],\
                 [0,self.pz*self.a0]]
 
-
-        for e in elements:
-            a = ase.Atom(e)
-            mass = a.mass / _Nav
-
-            form = pt.formula(a.symbol)
-            e_ = form.structure[0][1]
-            crys = e_.crystal_structure['symmetry'] 
-            a_ = e_.crystal_structure['a'] 
-            self.atoms.append({'ase':a, 'mass': mass, 'structure': crys, 'a':a_ })
+        self.setElsProps()
 
         self.setCrystal(self.setting['structure'])
 
         if self.setting['positions'] == 'rnd':
                 self.setRandomStructure()
+
+        self.setNumbers()
+        self.bulk.set_atomic_numbers(self.numbers)
+
+
+    def setNumbers(self):
+        self.numbers = []
+        for e in  self.t1_:
+            self.numbers.append( self.elsProps[e - 1]['number'])
+
+    def setElsProps(self):
+        for e in self.setting['elements']:
+            a = ase.Atom(e)
+            mass = a.mass / _Nav
+            number = a.number
+
+            form = pt.formula(a.symbol)
+            e_ = form.structure[0][1]
+            crys = e_.crystal_structure['symmetry'] 
+            a_ = e_.crystal_structure['a'] 
+            self.elsProps.append({'ase':a, 'mass': mass, 'structure': crys,
+                'a':a_ , 'number':number})
 
     def setCrystal(self, crys):
 
@@ -49,19 +59,19 @@ class System():
             d = 1.104  # N2 bondlength
             formula =  'Cu'+str(len(self.pos))
             cell =[(self.px*self.a0,0,0),(0,self.py*self.a0,0),(0,0,self.pz*self.a0)] 
-            alloy = ase.Atoms(formula, self.pos, pbc=True, cell=cell)
+            self.bulk = ase.Atoms(formula, self.pos, pbc=True, cell=cell)
 
         if crys == 'fcc':
             print 'fcc implemented'
             from ase.lattice.cubic import FaceCenteredCubic
-            alloy = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+            self.bulk = FaceCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
                                         size=(self.px,self.py,self.pz), symbol='Cu',
                     pbc=(1,1,1), latticeconstant=self.a0)
 
         if crys == 'bcc':
             print 'bcc implemented'
             from ase.lattice.cubic import BodyCenteredCubic
-            alloy = BodyCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
+            self.bulk = BodyCenteredCubic(directions=[[1,0,0], [0,1,0], [0,0,1]],
                                         size=(self.px,self.py,self.pz), symbol='Cu',
                     pbc=(1,1,1), latticeconstant=self.a0)
 
@@ -70,15 +80,10 @@ class System():
             sys.exit(0)
 
 
-        self.setting['nAtoms'] =  alloy.get_number_of_atoms()
-
+        self.setting['nAtoms'] =  self.bulk.get_number_of_atoms()
         self.calcAtoms2()
-
         self.genStructure()
-
-        self.pos = alloy.get_positions()
-        self.nAt = self.setting['nAtoms']
-        self.bulk = alloy
+        self.pos = self.bulk.get_positions()
 
     def update (self):
         cell  = self.bulk.get_cell()
@@ -117,12 +122,12 @@ class System():
 
 
     def getAtoms(self):
-        return self.atoms
+        return self.elsProps
 
     def Interaction (self):
         if self.setting['pot'] == 'lj':
             ljp = ljParameters.LjParameters()
-            str_ = ljp.lammpsInteraction(self.atoms)
+            str_ = ljp.lammpsInteraction(self.elsProps)
         if self.setting['pot'] == 'zhou':
             gz = zhou.calcPotentials(self.setting['elements'])
             gz.createPot()
@@ -173,7 +178,7 @@ class System():
     def getMasess(self):
         str_ =''
         i = 1
-        for e in self.atoms:
+        for e in self.elsProps:
             str_ += 'mass ' + str(i) + ' ' +str(e['mass']) + '\n'
             i+=1
         return  str_
@@ -184,8 +189,8 @@ def test_01():
                       'in_lmp':'in.min',
                        'lammps_exe' :'/opt/lmpizarro/GitHub/lammps/src/lmp_serial'}
 
-    setting ={'elements':['Al'], 'pot':'zhou', \
-              'pca':[], 'nAtoms':250,\
+    setting ={'elements':['Al','Fe'], 'pot':'zhou', \
+              'pca':[10], 'nAtoms':250,\
               #'structure':'bcc',\
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
@@ -199,7 +204,7 @@ def test_01():
     print sys.setting['elements']
     print sys.setting['nAt']
     print sys.setting['pca']
-    print 'atoms', sys.atoms
+    print 'atoms', sys.elsProps
     print 'bulk', sys.bulk
 
     print sys.Interaction()
@@ -224,7 +229,8 @@ def test_02():
     print sys.setting['elements']
     print sys.setting['nAt']
     print sys.setting['pca']
-    print sys.atoms
+    print sys.elsProps
+    print 'bulk', sys.bulk
 
     print sys.Interaction()
 
@@ -248,10 +254,12 @@ def test_03():
     print sys.setting['elements']
     print sys.setting['nAt']
     print sys.setting['pca']
-    print 'atoms', sys.atoms
+    print 'atoms', sys.elsProps
     print 'bulk', sys.bulk
 
     print sys.Interaction()
 
 if __name__ == '__main__':
+    test_01()
+    test_02()
     test_03()
