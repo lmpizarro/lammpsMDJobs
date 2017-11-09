@@ -181,49 +181,5 @@ def test_01():
     plt.plot(volumes, energies)
     plt.show()
 
-def test_02():
-
-    from ase.calculators.eam import EAM
-    sys_setting ={'elements':['Al', 'Fe'], 'pot':'zhou', \
-                  'pca':[10], 'nAtoms':250,\
-              #'structure':'bcc',\
-              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
-
-              'structure':'fcc',\
-              'positions':'rnd','a':4.5, 'period':[2,2,2]}
-
-    sys1 = sys.System(sys_setting)
-
-    potDir = './'
-    fileName = potDir + 'Zhou_AlFe.alloy' 
-
-
-    #potDir = '../../lammps/potentials/'
-    #fileName = potDir + 'Ni.adp' 
-
-    mishin = EAM(potential=fileName)
-    mishin.write_potential('new.eam.alloy')
-
-    sys1.bulk.set_calculator(mishin)
-    nAtoms = sys1.bulk.get_number_of_atoms()
-    ep = sys1.bulk.get_potential_energy() / nAtoms
-    forces = sys1.bulk.get_forces()
-
-    print ep
-    print mishin.Z
-    print mishin.mass
-    print mishin.a
-    print mishin.lattice
-    print mishin.nrho
-    print mishin.drho
-    print mishin.nr
-    print mishin.dr
-    #print mishin.d_d
-
-    mishin.set_splines()
-    print mishin.embedded_energy[0](30)
-
-    mishin.plot()
-
 if __name__ == '__main__':
-    test_02()
+    test_01()
