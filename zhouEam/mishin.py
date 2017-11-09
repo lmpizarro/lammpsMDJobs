@@ -153,7 +153,7 @@ def test_mishin():
               #'positions':'rnd','a':3.0, 'period':[5,5,5]}
 
               'structure':'fcc',\
-              'positions':'rnd','a':4.5, 'period':[2,2,2]}
+              'positions':'rnd','a':4.6, 'period':[2,2,2]}
 
     sys1 = sys.System(sys_setting)
 
@@ -187,7 +187,6 @@ def test_mishin():
     print mishin.embedded_energy[0](30)
 
     mishin.plot()
-
 
 if __name__ == '__main__':
     #test_01()
