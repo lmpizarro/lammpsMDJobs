@@ -49,7 +49,9 @@ E:young modulus B: bulk modulus
 Sh: rigidity modulus (shear modulus)
 Pr: Poisson ratio
 '''
-exp_props ={'Fe': {'a': 2.87, 'Ec': 4.28, 'Evf':1.79,'B':170, 
+class ExpProps():
+    def __init__(self):
+        self.exp_props ={'Fe': {'a': 2.87, 'Ec': 4.28, 'Evf':1.79,'B':170, 
                    'cijexp':{'C11':226, 'C12': 140, 'C44':116}},
                    'V':{'a':3.03, 'Ec':5.31, 'B':47,
                 'cijexp':{'C11':229, 'C12':140, 'C44':116}, 
@@ -110,6 +112,41 @@ exp_props ={'Fe': {'a': 2.87, 'Ec': 4.28, 'Evf':1.79,'B':170,
                     'cijcalc':{'fcc':{'C11':13.6, 'C44':165.6, 'C12':20.2}}
                 }
             }
+
+        for e in self.exp_props:
+            #print e, exp_props[e].keys()
+            form = pt.formula(e)
+            a = form.structure[0][1].crystal_structure
+            self.exp_props[e]['crystal_structure'] = a
+
+    def getProps(self):
+        return self.exp_props
+
+    def listFCC(self):
+        list_ =[]
+
+        for e in self.exp_props:
+            if self.exp_props[e]['crystal_structure']['symmetry'] == 'fcc':
+                list_.append(e)
+        return list_
+
+    def listBCC(self):
+        list_ =[]
+
+        for e in self.exp_props:
+            if self.exp_props[e]['crystal_structure']['symmetry'] == 'BCC':
+                list_.append(e)
+        return list_
+
+    def listHCP(self):
+        list_ =[]
+
+        for e in self.exp_props:
+            if self.exp_props[e]['crystal_structure']['symmetry'] == 'hcp':
+                list_.append(e)
+        return list_
+
+
 
 
 parameters={
@@ -242,7 +279,6 @@ class EamZhou():
                 'A_', 'rho_s_', 'f_e', 'F_n3_', 'F_2_',\
                 'name','gamma_','lambda_', 'mass',]
 
-
     def __str__(self):
         str_ = ' '*18
         for s in self.symbols:
@@ -275,12 +311,30 @@ class EamZhou():
         self.symbols = t
         print self
 
+    def listBySymmetry(self, sym):
+        list_ =[]
+
+
+        for e in parameters:
+
+            form = pt.formula(e)
+            a = form.structure[0][1].crystal_structure
+
+
+            if a['symmetry'] == sym:
+                list_.append(e)
+        return list_
+
+
+
 
 
 def test2():
     ez = EamZhou()
-
     ez.printAll()
+    print 'BCC ', ez.listBySymmetry('BCC')
+    print 'fcc ', ez.listBySymmetry('fcc')
+    print 'hcp ', ez.listBySymmetry('hcp')
 
 def latticeA(el):
     form = pt.formula(el)
@@ -291,6 +345,9 @@ def latticeA(el):
     return  a_
 
 def miningEpsSig(element):
+    expr = ExpProps()
+    exp_props = expr.getProps()
+
     cijsi = exp_props[element]
 
     a0 = latticeA(element)
@@ -310,6 +367,9 @@ def miningEpsSig(element):
 
 
 def miningCij(element, cijs=[ 'C11','C12','C44']):
+    expr = ExpProps()
+    exp_props = expr.getProps()
+
     cijsi = exp_props[element]
 
     keys = cijs 
@@ -327,7 +387,7 @@ def miningCij(element, cijs=[ 'C11','C12','C44']):
     return   E
 
 def test3():
-    element = 'Si'
+    element = 'U'
     ec = miningCij(element)
     ees = miningEpsSig(element)
 
@@ -343,6 +403,25 @@ def test4():
     for e in elsInOrder:
         print e, formula(e).mass, parameters[e]['A_'], parameters[e]['r_e']
 
+def test5():
+    expr = ExpProps()
+    exp_props = expr.getProps()
+
+    print exp_props
+
+    print expr.listFCC()
+    print expr.listBCC()
+    print expr.listHCP()
+
+    '''
+    for e in exp_props:
+        #print e, exp_props[e].keys()
+        form = pt.formula(e)
+        a = form.structure[0][1].crystal_structure
+
+        print a
+   '''
+
+
 if __name__ == '__main__':
     test3()
-    test4()
