@@ -48,6 +48,7 @@ class Lammps_():
         self.update(atoms)
         # TODO
         #raise PropertyNotImplementedError
+        self.calculate(atoms)
         return self.run_results['PotEng']
 
     def update(self, atoms):
@@ -181,5 +182,35 @@ def test_01():
     plt.plot(volumes, energies)
     plt.show()
 
+def test_elastic():
+    sys_setting ={'elements':['Fe'], 'pot':'zhou', \
+                  'pca':[], 'nAtoms':250,\
+              #'structure':'bcc',\
+              #'positions':'rnd','a':3.0, 'period':[5,5,5]}
+
+              'structure':'fcc',\
+              'positions':'rnd','a':4.5, 'period':[2,2,2]}
+
+    sys1 = sys.System(sys_setting)
+
+    lammps_setting = {'data_lmp':'data.lmp', 
+                   'in_lmp':'in.min',
+                   'lammps_exe': '/opt/lmpizarro/GitHub/lammps/src/lmp_serial',
+                   'log': 'log.lammps', 'sys':sys1, 'minimize':'elastic'}
+
+    calc = Lammps_(lammps_setting)
+    atoms = sys1.bulk 
+    atoms.set_calculator(calc)
+
+    for i in range(2):
+        pe = atoms.get_potential_energy()
+
+        print pe
+        import eConstants as eco
+
+        print eco.cxx['C44'], eco.cxx['C11']
+
+
+
 if __name__ == '__main__':
-    test_01()
+    test_elastic()

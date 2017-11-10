@@ -48,5 +48,5 @@ print "Shear Modulus 1 = ${shearmodulus1} ${cunits}" append info.dat
 print "Shear Modulus 2 = ${shearmodulus2} ${cunits}" append info.dat
 print "Poisson Ratio = ${poissonratio}" append info.dat
 
-shell rm restart.equil
-shell rm log.lammps
+#shell rm restart.equil
+#shell rm log.lammps

@@ -32,7 +32,8 @@ min_modify	     dmax ${dmax} line quadratic
 
 # Setup output
 thermo		1
-thermo_style custom step temp pe press pxx pyy pzz pxy pxz pyz lx ly lz vol
+#thermo_style custom step temp pe press pxx pyy pzz pxy pxz pyz lx ly lz vol
+thermo_style custom step press cpu press pxx pyy pzz pxy pxz pyz ke pe etotal  vol lx ly lz atoms 
 thermo_modify norm no
 '''
 
@@ -290,8 +291,8 @@ print "Shear Modulus 1 = ${shearmodulus1} ${cunits}" append info.dat
 print "Shear Modulus 2 = ${shearmodulus2} ${cunits}" append info.dat
 print "Poisson Ratio = ${poissonratio}" append info.dat
 
-shell rm restart.equil
-shell rm log.lammps
+#shell rm restart.equil
+#shell rm log.lammps
 '''
 
         self.in_elastic='''

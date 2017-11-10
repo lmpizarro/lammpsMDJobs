@@ -74,7 +74,7 @@ fix 1 all nve
         else:
             elast = elastic.Elastic(self.setting)
             elast.write_scripts(self.Interaction)
-            sys.exit(0)
+            #sys.exit(0)
 
 
     def formatMultiline(self, multiline):

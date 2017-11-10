@@ -15,8 +15,9 @@ class DataLammps():
 
 
     def genFile(self):
-        self.str_ = '\n'
+        self.str_ = '\n\n'
         print self.nAtoms
+        self.str_ = '\nxy xz yz\n'
         self.str_ += str(self.nAtoms) + ' atoms\n'
         self.str_ += str(self.nTypes) + ' atom types\n'
         xlo = self.system.box[0][0]
