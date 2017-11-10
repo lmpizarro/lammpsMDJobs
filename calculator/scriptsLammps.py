@@ -3,7 +3,8 @@ import sys
 sys.path.append('../zhouEam')
 import ljParameters
 import eamZhouPotential as zhou
-import system as sys
+import system as sysAt
+import elastic 
 
 
 class SLammps():
@@ -19,50 +20,62 @@ class SLammps():
         self.log = 'log.lammps'
 
         self.in_frame =''' 
-            clear
-            boundary    p p p
-            units       metal
-            atom_style  atomic
+clear
+boundary    p p p
+units       metal
+atom_style  atomic
 
-            thermo 50
+thermo 50
 
-            # 1 atoms positions
-            read_data %s	
+# 1 atoms positions
+read_data %s	
 
-            # 2 interactions
-            %s
+# 2 interactions
+%s
 
-            # 3 mass 1 1.0e-20
-            %s
+# 3 mass 1 1.0e-20
+%s
             
-            thermo_style custom step press cpu pxx pyy pzz pxy pxz pyz ke pe etotal  vol lx ly lz atoms 
-            # 4 fix
-            %s
+thermo_style custom step press cpu pxx pyy pzz pxy pxz pyz ke pe etotal  vol lx ly lz atoms 
+# 4 fix
+%s
 
-            run 0
+run 0
         '''
         self.fix_min='''
-            fix 1 all box/relax iso 0.0 vmax 0.001
-            min_style cg
-            minimize 1e-15 1e-15 50000 50000
+fix 1 all box/relax iso 0.0 vmax 0.001
+min_style cg
+minimize 1e-15 1e-15 50000 50000
         '''
 
         self.fix_nve='''
-            fix 1 all nve
+fix 1 all nve
         '''
 
+        self.Interaction = self.system.Interaction()
+
+        print self.Interaction
 
 
-        self.defInteraction = self.system.Interaction()
-        self.in_frame = self.formatMultiline(self.in_frame)
 
-        if settings['minimize'] == True:
-            self.fix = self.formatMultiline(self.fix_min)
+    def create_in(self):
+        if self.setting['minimize'] == True or self.setting['minimize'] == False:
+            if self.setting['minimize'] == True:
+                self.fix = self.fix_min
+            else:
+                self.fix = self.fix_nve
+
+
+            mass = self.system.getMasess()
+            in_lammps = self.in_frame % (self.data_lmps, self.Interaction, mass, self.fix)
+
+            with open(self.in_lmp, 'w') as inscript:
+                 inscript.write( in_lammps )
         else:
-            self.fix = self.formatMultiline(self.fix_nve)
+            elast = elastic.Elastic(self.setting)
+            elast.write_scripts(self.Interaction)
+            sys.exit(0)
 
-
-        self.interaction = self.formatMultiline(self.defInteraction)
 
     def formatMultiline(self, multiline):
         l = multiline.split('\n')
@@ -71,13 +84,6 @@ class SLammps():
            str_ +=e.lstrip() + '\n'
         return str_
 
-
-    def create_in(self):
-        mass = self.system.getMasess()
-        in_lammps = self.in_frame % (self.data_lmps, self.interaction, mass, self.fix)
-
-        with open(self.in_lmp, 'w') as inscript:
-             inscript.write( in_lammps )
 
     def setInteraction (self, interaction):
         self.interaction = interaction
@@ -95,14 +101,14 @@ def test_01():
               'structure':'rnd',\
               'positions':'rnd','a':4.2, 'period':[5,5,5]}
 
-    sys1 = sys.System(sys_setting)
+    sys1 = sysAt.System(sys_setting)
 
     lammps_setting = {'data_lmp':'data.lmp', 
                       'in_lmp':'in.min',
                       'lammps_exe':\
                               '/opt/lmpizarro/GitHub/lammps/src/lmp_serial',
                               'log': 'log.lammps',
-                              'sys':sys1}
+                              'sys':sys1, 'minimize':'elastic'}
 
 
     sLmp = SLammps(lammps_setting)
