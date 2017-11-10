@@ -27,3 +27,4 @@ restart*
 in.*
 *.sw
 *.mod
+*.alloy

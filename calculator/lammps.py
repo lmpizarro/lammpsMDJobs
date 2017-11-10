@@ -208,7 +208,10 @@ def test_elastic():
         print pe
         import eConstants as eco
 
-        print eco.cxx['C44'], eco.cxx['C11']
+        print ("c44: %f c11 %f c12 %f B: %f Cp: %f")%\
+                (eco.cxx['C44'], eco.cxx['C11'],\
+                 eco.cxx['C12'], eco.cxx['B'],\
+                 eco.cxx['Pr'])
 
 
 
