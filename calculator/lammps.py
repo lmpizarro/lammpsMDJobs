@@ -6,7 +6,7 @@ import sys
 sys.path.append('../zhouEam')
 sys.path.append('../../pizza/src')
 
-import system as sys
+import system as atSys
 import wDataLmp as dLmps
 
 from log import log
@@ -146,7 +146,7 @@ def test_01():
               'structure':'fcc',\
               'positions':'rnd','a':4.5, 'period':[5,5,5]}
 
-    sys1 = sys.System(sys_setting)
+    sys1 = atSys.System(sys_setting)
 
     lammps_setting = {'data_lmp':'data.lmp', 
                       'in_lmp':'in.min',
@@ -199,7 +199,7 @@ def test_elastic():
               'structure':'fcc',\
               'positions':'rnd','a':4.5, 'period':[2,2,2]}
 
-    sys1 = sys.System(sys_setting)
+    sys1 = atSys.System(sys_setting)
 
     lammps_setting = {'data_lmp':'data.lmp', 
                       'in_lmp':'in.min',

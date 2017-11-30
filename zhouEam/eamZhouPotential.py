@@ -128,10 +128,11 @@ class calcPotentials():
         str_ +='\n' 
 
         for c in self.k_p:
-            if c != 'name' and c != 'symbol':
+            if c != 'name' and c != 'symbol' and c !='struct':
                 str_ +='{:8}'.format(c)
                 for s in self.symbols:
-                    str_ +='{:14f}'.format(float(self.myParameters[s][c]))
+                    t = self.myParameters[s][c]
+                    str_ +='{:14f}'.format(float(t))
                 str_ +='\n'
 
         return str_
@@ -185,6 +186,7 @@ def test01():
     lamda = p['lambda_']
     c = calcPotentials(ES)
     f = c.makePairPotAA(A, gamma, r_e, kappa, B, omega, lamda)
+
     import numpy as np
     rr = np.linspace(0, 5, 50)
     ff = []
@@ -204,7 +206,6 @@ def test01():
     plt.plot(rr, dd)
     plt.show()
 
-
     ee = []
     F_ni_E1 = [E1['F_n0_'], E1['F_n1_'], E1['F_n2_'], E1['F_n3_']]
     F_i_E1 = [E1['F_0_'], E1['F_1_'], E1['F_2_'], E1['F_3_']]
@@ -220,4 +221,4 @@ def test01():
 
 
 if __name__ == '__main__':
-    test01()
+    test02()
