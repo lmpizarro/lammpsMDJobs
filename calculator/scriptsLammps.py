@@ -12,12 +12,23 @@ class SLammps():
 
         self.setting = settings
 
-        self.data_lmps = self.setting['data_lmp']
-        self.in_lmp =  self.setting['in_lmp']
+        if 'data_lmp' in settings:
+            self.data_lmps = self.setting['data_lmp']
+        else:
+            self.data_lmps = 'data.lmp' 
+
+        if 'in_lmp' in settings:
+            self.in_lmp = settings['in_lmp']
+        else:
+            self.in_lmp = 'in.min'
+
         self.system = self.setting['sys']
 
+        if 'log' in settings:
+            self.log = settings['log']
+        else:
+            self.log = 'log.lammps'
 
-        self.log = 'log.lammps'
 
         self.in_frame =''' 
 clear

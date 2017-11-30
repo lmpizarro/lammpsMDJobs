@@ -19,8 +19,16 @@ class Lammps_():
         self.label = label
         self.calls = 0
 
-        self.in_lmp = settings['in_lmp']
-        self.log = settings['log']
+        if 'in_lmp' in settings:
+            self.in_lmp = settings['in_lmp']
+        else:
+            self.in_lmp = 'in.min'
+
+        if 'log' in settings:
+            self.log = settings['log']
+        else:
+            self.log = 'log.lammps'
+
         self.lammps_exe = settings['lammps_exe']
 
         self.scriptLammps = sLmps.SLammps(settings)
@@ -194,9 +202,9 @@ def test_elastic():
     sys1 = sys.System(sys_setting)
 
     lammps_setting = {'data_lmp':'data.lmp', 
-                   'in_lmp':'in.min',
-                   'lammps_exe': '/opt/lmpizarro/GitHub/lammps/src/lmp_serial',
-                   'log': 'log.lammps', 'sys':sys1, 'minimize':'elastic'}
+                      'in_lmp':'in.min',
+                      'lammps_exe': '/opt/lmpizarro/GitHub/lammps/src/lmp_serial',
+                      'log': 'log.lammps', 'sys':sys1, 'minimize':'elastic'}
 
     calc = Lammps_(lammps_setting)
     atoms = sys1.bulk 
